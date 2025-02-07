@@ -1,0 +1,60 @@
+{
+  "name": "cfml-formatter",
+  "displayName": "CFML Formatter",
+  "description": "CFML Formatting and language server for VSCode",
+  "author": "Mark Drew",
+  "preview": true,
+  "license": "MIT",
+  "version": "1.0.57",
+  "publisher": "markdrew",
+  "categories": [
+    "Formatters",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "cfml",
+    "coldfusion",
+    "lucee"
+  ],
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "icon": "assets/logo@2x.png",
+  "activationEvents": [
+    "workspaceContains:**/*.cfm",
+    "workspaceContains:**/*.cfml",
+    "workspaceContains:**/*.cfc",
+    "workspaceContains:**/*.cfs"
+  ],
+  "main": "./client/out/extension",
+  "contributes": {
+    "configuration": {
+      "title": "CFML Formatter",
+      "properties": {
+        "cfml-formatter.javaPath": {
+          "type": "string",
+          "default": "/usr/bin/java"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "cfml-formatter.openServerURL",
+        "title": "CFML Formatter: Open Server URL"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm version patch --no-git-tag-version && npm run compile",
+    "compile": "tsc -b",
+    "watch": "tsc -b -w",
+    "postinstall": "cd client && npm install && cd ..",
+    "vscode:package": "cd server && ant && cd .. && vsce package --allow-missing-repository"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "get-port": "^7.1.0"
+  }
+}

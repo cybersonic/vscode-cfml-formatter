@@ -1,0 +1,102 @@
+<project name="multi-build" default="build-all" basedir=".">
+    <!-- Global properties -->
+    <property name="src.dir" location="src/main" />
+    <property name="resources.dir" location="${src.dir}/resources" />
+    <property name="dist.dir" location="dist" />
+    <property name="war.output" location="${dist.dir}/lucee_lsp.war" />
+    <!-- <property name="jar.output" location="${dist.dir}/my_app.jar" /> -->
+    <property name="maven.command" value="mvn" />
+    <property name="build.dir" location="build" />
+
+    <!-- Clean task -->
+    <target name="clean">
+        <delete dir="${dist.dir}" />
+        <delete dir="target/" />
+        <delete dir="target/" />
+        <delete>
+            <fileset dir="../resources/" includes="*.jar" />
+        </delete>
+        <delete file="${resources.dir}/lucee_lsp.war" />
+        <delete dir="${src.dir}/cfml/WEB-INF/lucee-server" />
+        <delete dir="${src.dir}/cfml/WEB-INF/lucee" />
+    </target>
+
+    <!-- Task to build the WAR file -->
+    <target name="build-war" depends="clean">
+        <!-- Create dist directory -->
+        <property name="lucee_war.dir" location="${dist.dir}/lucee_war" />
+        <mkdir dir="${lucee_war.dir}" />
+        <mkdir dir="${lucee_war.dir}/WEB-INF/classes" />
+
+        <!-- Copy Lucee source files  -->
+        <!-- <mkdir dir="${dist.dir}/WEB-INF/" /> -->
+        <copy todir="${lucee_war.dir}">
+
+            <fileset dir="${src.dir}/cfml">
+                <exclude name="linter/**" />
+                <exclude name="testbox/**" />
+            </fileset>
+        </copy>
+
+
+        <!-- Package as WAR     -->
+        <war destfile="${war.output}">
+            <fileset dir="${lucee_war.dir}" />
+        </war>
+
+
+        <!-- Move WAR file to resources -->
+        <copy file="${war.output}" todir="${resources.dir}" />
+
+        <!-- Clean up the folder. Uncomment to debug -->
+        <!-- <delete dir="${lucee_war.dir}" /> -->
+    </target>
+
+    <!-- Task to build the JAR file -->
+    <target name="build-jar" depends="build-war">
+        <exec executable="${maven.command}" failonerror="true">
+            <arg value="clean" />
+            <arg value="package" />
+        </exec>
+        <move todir="../resources/">
+            <fileset dir="target/">
+                <include name="*.jar" />
+            </fileset>
+        </move>
+    </target>
+
+
+    <target name="package-vsix" depends="clean,build-jar">
+        <echo message="Packaging VSCode extension into ${vsix.output}..." />
+
+        <!-- Create build directory -->
+        <mkdir dir="${build.dir}" />
+
+        <!-- Copy files, excluding unnecessary ones -->
+        <copy todir="${build.dir}">
+            <fileset dir="${src.dir}">
+                <!-- Include key files -->
+                <include name="package.json" />
+                <include name="README.md" />
+                <include name="CHANGELOG.md" />
+                <include name="out/**" />
+
+                <!-- Exclude unnecessary files -->
+                <exclude name="node_modules/**" />
+                <exclude name=".git/**" />
+                <exclude name=".vscode/**" />
+                <exclude name="build/**" />
+            </fileset>
+        </copy>
+
+        <!-- Create the VSIX file -->
+        <zip destfile="${vsix.output}" basedir="${build.dir}">
+            <zipfileset dir="${build.dir}" />
+        </zip>
+
+        <echo message="VSIX package created: ${vsix.output}" />
+    </target>
+
+    <!-- Build everything -->
+    <target name="build-all" depends="build-war, build-jar" />
+</project>

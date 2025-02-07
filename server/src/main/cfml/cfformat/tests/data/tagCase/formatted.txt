@@ -1,0 +1,7 @@
+<cfif a eq b>
+    <div></div>
+</cfif>
+~
+<CFIF a eq b>
+    <DIV></DIV>
+</CFIF>

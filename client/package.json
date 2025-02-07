@@ -1,0 +1,23 @@
+{
+  "name": "cfml-server-client",
+  "description": "cfml-server-client",
+  "author": "cfml-server-client",
+  "license": "MIT",
+  "version": "0.0.1",
+  "publisher": "cfml-server-client",
+  "repository": {
+    "type": "git",
+    "url": "cfml-server-client"
+  },
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "dependencies": {
+    "detect-port": "^2.1.0",
+    "vscode-languageclient": "^8.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "@types/vscode": "^1.81.0"
+  }
+}

@@ -1,0 +1,25 @@
+{
+    "dependencies":{
+        "testbox":"^6.0.1+9",
+        "commandbox-cfformat":"^0.19.0",
+        "cfscriptme-command":"^0.1.5"
+    },
+    "installPaths":{
+        "testbox":"testbox/",
+        "commandbox-cfformat":"cfformat/",
+        "cfscriptme-command": "cfscriptme/"
+
+    },
+    "testbox":{
+        "directory":"tests.specs",
+        "recurse":true,
+        "reporter":"",
+        "runner":[
+            {
+                "default":"http://localhost:8080/tests/index.cfm"
+            }
+        ],
+        "watchPaths":"**.cfc",
+        "outputFormats":"json,junit,html"
+    }
+}

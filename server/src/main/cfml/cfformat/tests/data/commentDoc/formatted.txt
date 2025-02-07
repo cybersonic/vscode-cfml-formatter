@@ -1,0 +1,29 @@
+component {
+
+    /**
+     * @hint hint goes here
+     */
+    function test() {
+    }
+
+}
+~
+component {
+
+    /**
+    * @hint hint goes here
+    */
+    function test() {
+    }
+
+}
+~
+component {
+
+    /**
+      * @hint hint goes here
+    */
+    function test() {
+    }
+
+}

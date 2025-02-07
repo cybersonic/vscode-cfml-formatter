@@ -1,0 +1,13 @@
+{
+	"excludes": [
+		{
+			"code": "ARG_HINT_MISSING_SCRIPT"
+		},
+		{
+			"code": "FUNCTION_HINT_MISSING"
+		},
+		{
+			"code": "COMPONENT_TOO_LONG"
+		}
+	]
+}
