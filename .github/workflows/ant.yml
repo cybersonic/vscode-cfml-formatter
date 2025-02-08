@@ -5,7 +5,7 @@ name: Java CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main" , "IOC" ]
   pull_request:
     branches: [ "main" ]
 
@@ -22,4 +22,4 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
     - name: Build with Ant
-      run: ant -noinput -buildfile build.xml
+      run: cd server && ant -noinput -buildfile build.xml
