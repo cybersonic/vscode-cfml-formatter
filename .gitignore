@@ -137,9 +137,11 @@ server/target/
 server/build/
 server_old/
 client/src/extension-orig.ts
+server/src/main/cfml/WEB-INF/lucee/
 server/src/main/cfml/WEB-INF/lucee-server/
 *.vsix
 tomcat/
 server/src/main/cfml/linter/
 server/src/main/cfml/testbox/
 server/src/main/cfml/cfscriptme/
+server/src/main/cfml/lsp/docs/types.ts
