@@ -5,8 +5,12 @@
   "author": "Mark Drew",
   "preview": true,
   "license": "MIT",
-  "version": "1.0.57",
+  "version": "1.0.60",
   "publisher": "markdrew",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cybersonic/vscode-cfml-formatter"
+  },
   "categories": [
     "Formatters",
     "Programming Languages"
