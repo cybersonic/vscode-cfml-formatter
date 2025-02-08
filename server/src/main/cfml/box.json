@@ -16,7 +16,7 @@
         "reporter":"",
         "runner":[
             {
-                "default":"http://localhost:8080/tests/index.cfm"
+                "default":"http://localhost:4000/tests/index.cfm"
             }
         ],
         "watchPaths":"**.cfc",

@@ -6,12 +6,21 @@
     <title>LLSP - Lucee Language Server</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
     <cfscript>
         cs=getPageContext().getConfig().getConfigServerImpl();
         instance=createObject("java","lucee.runtime.lsp.LSPEndpointFactory").getExistingInstance();
         comp = instance.getComponent();
         comp_mt = getMetadata(comp);
-       // dump(instance);
+        bf = comp.getBeanFactory();
+        docStore = bf.getBean("TextDocumentStore");
+        configStore = bf.getBean("ConfigStore");
+        messageStore = bf.getBean("MessageStore");
+        documents = docStore.getDocuments();
+
+
+        
         // dump(instance.getComponent().getObjects().lifecycle.getConfig());
         // dump(instance.sendMessageToClient("Test Message") );
         
@@ -54,12 +63,19 @@
             return output;
         }
     </cfscript>
-  </head>
-  <body>
+
     
     <div class="container-fluid">        
         <cfoutput>
         <h1>Lucee Language Server Status</h1>
+            <ul class="nav">
+                <li class="nav-item">
+                  <a class="nav-link active" aria-current="page" href="/">Home</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="/tests/">Test Suite</a>
+                </li>
+              </ul>
         <h2>Settings</h2>
         <ul>
             <li><strong>Listener Instance</strong>: <code>#comp_mt.fullname#</code></li>
@@ -76,11 +92,7 @@
             <div class="col-md-6">
                 <h3>Message Log</h3>
 
-                <cfif isDefined("server.store")>
-                    <cfset messages = server.store.getMessages() ?: []>
-                <cfelse>
-                    <cfset messages = []>
-                </cfif>
+                <cfset messages = messageStore.getMessages()>
                 <cfset msgCount = 20>
                 <cfset from=messages.len()>
                 <cfset to=from LT msgCount ?  1 : messages.len() - msgCount>
@@ -178,15 +190,33 @@
 
                 
                 <ul>
-                    <cfloop collection="#server.documents#" item="key">
+                    <cfloop collection="#documents#" item="key">
                         <cfset docHash = hash(key)>
-                        <li><i class="bi bi-file-code"></i><strong>#relativePath(key)#</strong> <button class="btn btn-primary btn-sm" data-detail="#docHash#"><i class="bi bi-arrow-down-circle-fill"></i></button>: 
+                        <li><i class="bi bi-file-code"></i><strong>#relativePath(key)#</strong> 
+                            
+                            <button class="btn btn-primary btn-sm" data-detail="#docHash#"><i class="bi bi-arrow-down-circle-fill"></i></button>: 
                             <div class='small' id='detail-#docHash#' style="display:none;">
-                                <code><pre>#server.documents[key]#</pre></code>
+                                <code><pre>#documents[key].getText()#</pre></code>
                             </div>
                         </li>
                     </cfloop>
                 </ul>
+                <!--- <h3>Documents Parsed</h3>
+                <ul>
+                    <cfloop collection="#server.documents_parsed#" item="key">
+                        <cfset docHash = hash(key)>
+                        <li><i class="bi bi-file-code"></i><strong><a href="/view/parsed/?document=#key#">#relativePath(key)#</a></strong> #StructKeyList(server.documents_parsed[key])#
+                        </li>
+                    </cfloop>
+                </ul> --->
+                <!--- <h3>Documents Tokenized</h3>
+                <ul>
+                    <cfloop collection="#server.documents_tokenized#" item="key">
+                        <cfset docHash = hash(key)>
+                        <li><i class="bi bi-file-code"></i><strong><a href="/view/parsed/?document=#key#">#relativePath(key)#</a></strong> #StructKeyList(server.documents_tokenized[key])#
+                        </li>
+                    </cfloop>
+                </ul> --->
 
 
                     
@@ -206,7 +236,7 @@
     <div class="row">
         <div class="col-md-6">
             <h2>Client Config</h2>
-            <cfdump var="#server.objs.lifecycle.getConfig()#" expand="false">
+            <cfdump var="#configStore.getConfig()#" expand="false">
         </div>
     </div>
     <script>
