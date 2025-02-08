@@ -1,66 +1,71 @@
-component {
+component accessors="true" {
     import java.net.URL;
     property name="documents";
+    property name="LSPServer";
+    property name="ConfigStore";
+    property name="Console";
+    property name="CFFormat";
+    property name="TextDocumentStore";
+    property name="beanFactory";
 
-    function init(lspserver, logger){
-        variables.lspserver = lspserver;
-        variables.console = logger;
+    public function init(){
+        return this;
+    }
 
-       
-        var cfformatPath=expandPath('/cfformat/');
+    private textDocumentItem function updateDocument( required struct textDocument ){
 
-        // // get the docuiment append something to it and do some magic. 
-    
-        // fileSetAccessMode(cfformatPath & "bin/cftokens", "777");
-        fileSetAccessMode(cfformatPath & "bin/cftokens_osx", "777");
-        fileSetAccessMode(cfformatPath & "bin/cftokens_linux", "777");
-        fileSetAccessMode(cfformatPath & "bin/cftokens_linux_musl", "777");
+        var textDocumentItem = getBeanFactory().injectProperties("textDocumentItem", arguments.textDocument);
+        var cfformat = getBeanFactory().getBean("CFFormat");
+
+        var uri = textDocumentItem.getURI();
+        var text = textDocumentItem.getText();
         
-        variables.cfformat = new cfformat.models.CFFormat(cfformatPath & "bin/", cfformatPath);
+        // write it 
+        var fileHash = "/tmp/#Hash(uri)#";
+        var fileExtension = listLast(uri, ".");
+        var fileName = "#fileHash#.#fileExtension#";
+        FileWrite(fileName, text);
+
+        var tokens = cfformat.cftokensFile("tokenize", fileName);
+        var parsed = cfformat.cftokensFile("parse", fileName);
+            
+        textDocumentItem.setTokens(tokens);
+        textDocumentItem.setParsed(parsed);
+
+        getTextDocumentStore().updateDocument(textDocumentItem);
+        return textDocumentItem;
     }
 
-
-    
-
-    function updateDocument( required string uri, required string text ){
-        server.documents[uri] = text;
-    }
-
-    function deleteDocument( required string uri ){
-        if(server.documents.keyExists(uri)){
-            server.documents.delete(uri);
-        }
-    }
-    function getDocuments(){
-        return server.documents;
-    }
-
-    private function _getDoc( required string uri ){
-        if(!server.documents.keyExists(uri)){
-            return "";
-        }
-        return server.documents[uri];
-    }
-    void function didClose( required struct message ){
+    public void function didClose( required struct message ){
         // console.log("Did Close", message);
-        deleteDocument(message.params.textDocument.uri)
+        getTextDocumentStore().deleteDocument(message.params.textDocument.uri);
+        
     }
-    void function didOpen( required struct message ){
-        updateDocument(message.params.textDocument.uri, message.params.textDocument.text);
+    public void function didOpen( required struct message ){
+        updateDocument(message.params.textDocument);
     }
-    void function didChange( required struct message ){
+
+
+    public void function didChange( required struct message ){
         // TODO: Check what is in the content Changes. We are doing full sync for now.
-        updateDocument(message.params.textDocument.uri, message.params.contentChanges[1].text);
+        console.log("didChange", message.params);
+
+        var textDocument = {
+            "uri": message.params.textDocument.uri,
+            "version": message.params.textDocument.version,
+            "text": message.params.contentChanges[1].text
+        };
+        updateDocument(textDocument);
 
         // variables.lspserver 
 
-        var diagnostics = diagnostic(message);
+        // var diagnostics = diagnostic(message);
 
-        var lspEndpoint =  variables.lspserver.getLspEndpoint();
-            lspEndpoint.sendMessageToClient(diagnostics);
+        // var lspEndpoint =  variables.lspserver.getLspEndpoint();
+        //     lspEndpoint.sendMessageToClient(diagnostics);
     }
     
-    function completion(required struct message){
+    public struct function completion(required struct message){
         // Returns a completion thing.
 
         return {
@@ -86,7 +91,7 @@ component {
      * @from the file from where to search , in the format file:///Users/etc. 
      * @to usually the root of the worspace. 
      */
-    public string function findConfigFile(from, to){
+    private string function findConfigFile(from, to){
         // Make them into URIs. 
         var fromFile = new URL(from);
         var fromPath = getDirectoryFromPath(fromFile.getPath());
@@ -135,7 +140,12 @@ component {
     }
     
     
-    function rangeFormatting(required struct message){
+    /**
+     * TODO: implement
+     *
+     * @message 
+     */
+    private function rangeFormatting(required struct message){
 
       
         var cfformatPath=expandPath('/cfformat/');
@@ -147,28 +157,20 @@ component {
         var range = message.params.range;
         var lines = getLines(theDoc);
         var selectedLines = arraySlice(lines, range.start.line + 1, range.end.line - range.start.line + 1) ;
-        // Ignore chars for the moment, since it would not make sense. 
-        // var firstLine = mid(selectedLines.First(), range.start.character + 1, selectedLines.First().len() - range.start.character);
-        // var lastLine = mid(selectedLines.Last(), 1, range.end.character);
-        // selectedLines[1] = firstLine;
-        // selectedLines[selectedLines.len()] = lastLine;
-        // dump(server.separator.line)
+     
         selectedLines = selectedLines.toList(server.separator.line);
         var extension  = listLast(message.params.textDocument.uri, ".");
         var filename = "/tmp/#Hash(message.params.textDocument.uri)#.#extension#";
-        // TODO: We might need to fake this, somehow?
-        // if it is a cfm and doesnt have cfscript, since it's a range, add <cfscript></cfscript> around it.
+        
         FileWrite(filename, selectedLines);
         var settings={};
 
-        var configFile = findConfigFile(message.params.textDocument.uri, variables.lspserver.getConfig().rootUri);
-        if(!isNull(configFile)){
-            if(server.documents.keyExists(configFile) && isJSON(server.documents[configFile])){
-                
-                settings = deserializeJson(server.documents[configFile]);
-            }
+        // This gets the actual config as JSON
+        var configFile = findConfigFile(message.params.textDocument.uri, getConfigStore().getConfig().rootUri);
+        if(!isNull(configFile) && isJSON(server.documents[configFile])){
+            settings = deserializeJson(server.documents[configFile]);
         }
-        var formattedDoc  = variables.cfformat.formatFile(filename,settings);
+        var formattedDoc  = getCFFormat().formatFile(filename,settings);
         return {
             "jsonrpc": "2.0",
             "id": message.id,
@@ -210,10 +212,16 @@ component {
 
     public struct function formatting(required struct message){
     
-      
-        param name="server.documents" type="struct" default=StructNew();
-        var theDoc = _getDoc(arguments.message.params.textDocument.uri);
+        var theDoc = getTextDocumentStore().getDocument(arguments.message.params.textDocument.uri);
         
+        // Need to return an error , rather than a blank result.
+        if(isNull(theDoc)){
+            return {
+                "jsonrpc": "2.0",
+                "id": message.id,
+                "result": []
+            }
+        }
         // Have to save the file to disk and then run the formatter on it.
         var extension  = listLast(message.params.textDocument.uri, ".");
         var filename = "/tmp/#Hash(message.params.textDocument.uri)#.#extension#";
@@ -221,7 +229,7 @@ component {
         FileWrite(filename, theDoc);
         // TODO: figure out how we get these, either from file or as a .cfformat file 
         var settings={};
-        var loadSettings = findConfigFile(message.params.textDocument.uri, variables.lspserver.getConfig().rootURI);
+        var loadSettings = findConfigFile(message.params.textDocument.uri, getConfigStore().getConfig().rootURI);
         if(isJSON(loadSettings)){
             settings = deserializeJSON(loadSettings);
         }
@@ -229,23 +237,7 @@ component {
         
         var originalLines = getLines(theDoc);
 
-        var formattedDoc  = variables.cfformat.formatFile(filename,settings);
-        // console.log(formattedDoc);
-        // var lines = getLines(formattedDoc);
-
-        // var lspEndpoint =  variables.lspserver.getLspEndpoint(); 
-        // if(!isNull(lspEndpoint)){
-          
-        //     lspEndpoint.sendMessageToClient({
-        //         "jsonrpc": "2.0",
-        //         "id": 1,
-        //         "method": "window/showMessageRequest",
-        //         "params": {
-        //             "type": 3,
-        //             "message": "Document Formatted"
-        //         }
-        //     });
-        // }
+        var formattedDoc  = getCFFormat().formatFile(filename,settings);
 
         return {
             "jsonrpc": "2.0",
@@ -272,31 +264,31 @@ component {
         return ListToArray(text, "", true);
     }
 
-    function onMissingMethod(required string methodName, required array args){
-        console.log("Missing Method", methodName, args);
+    public void function onMissingMethod(required string methodName, required array args){
+        getConsole().log("Missing Method", methodName, args);
     }
 
     
 
-    public any function convertTagToScript(required string tagCFML) {
+    // public any function convertTagToScript(required string tagCFML) {
         
-        var toScript =  new cfscriptme.models.toscript.ToScript();
-        var ret = toScript.toScript(fileContent=tagCFML);
+    //     var toScript =  new cfscriptme.models.toscript.ToScript();
+    //     var ret = toScript.toScript(fileContent=tagCFML);
         
-        return ret;
-    }
+    //     return ret;
+    // }
     
-    public any function codeAction(required struct message){
-        console.log(message);
-        return {
-            "jsonrpc": "2.0",
-            "id": message.id,
-            "result": [
+    // public any function codeAction(required struct message){
+    //     console.log(message);
+    //     return {
+    //         "jsonrpc": "2.0",
+    //         "id": message.id,
+    //         "result": [
                 
-                'refactor.rewrite'
+    //             'refactor.rewrite'
                 
-            ]
+    //         ]
 
-        }
-    }
+    //     }
+    // }
 }

@@ -1,20 +1,19 @@
-component {
+component accessors=true {  
+    
+    property name="LSPServer";
+    property name="ConfigStore";
+    property name="TextDocumentStore";
+    property name="Console";
 
-    function init(lspserver, logger){
-        variables.lspserver = lspserver;
-        variables.console = logger;
+
+    function init(){
+        return this;
     }
 
     function configuration(message) {
 
-        var store = variables.lspserver.getStore();
-            store.addItem("config", message);
-
-        // Now we got the configuration, lets read all the files to get the cfformat files.
-
-        console.log("Configuration", message);
-
-
+        getConfigStore().setConfig(message.params);
+        
         return {
             "result": {
             }
@@ -22,14 +21,15 @@ component {
 
       
     }
+
     function didChangeConfiguration(message){
         // console.log("Did Change Configuration", message);
         //  "params":{"settings":{"cfml-formatter":{"javaPath":"/usr/bin/java"}}}}
         // TODO: Update the configuration if we change it 
-        var config = variables.lspserver.getConfig();
-        for(var change in message.params.settings){
+        // var config = variables.lspserver.getConfig();
+        // for(var change in message.params.settings){
          
-        }
+        // }
         // store.addMessage("null", "workspace/configuration", "request", message);
         // lspEndpoint.sendMessageToClient(message);
     }
@@ -59,5 +59,9 @@ component {
         
         // store.addMessage("null", "workspace/configuration", "request", message);
         // lspEndpoint.sendMessageToClient(message);
+    }
+    
+    function onMissingMethod(required string methodName, required array args){
+        console.log("Missing Method", methodName, args);
     }
 }

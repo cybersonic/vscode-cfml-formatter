@@ -1,10 +1,11 @@
-component {
+component accessors="true" {
+
+    property name="LSPServer";
+    property name="Console";
 
 
-    function init(lspserver, logger){
-        variables.lspserver = lspserver;
-        variables.console = logger;
-    
+    function init(){
+        return this;
     }
 
     function setTrace(item){

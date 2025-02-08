@@ -1,26 +1,39 @@
-component {
+component accessors=true {
 
     variables.initilized = false;
 
-
+    property name="beanFactory";
+    property name="lspEndpoint";
+    property name="Console";
     
 
     function initialize(){
-        getConsole();
+
+
+        var beanFactory = new framework.ioc("/lsp");
+        beanFactory.declare("LSPServer").asValue(this);
+        beanFactory.declare("$").instanceOf("lsp.methods.Util");
+
+
+        var cfformatPath=expandPath('/cfformat/');
+        fileSetAccessMode(cfformatPath & "bin/cftokens_osx", "777");
+        fileSetAccessMode(cfformatPath & "bin/cftokens_linux", "777");
+        fileSetAccessMode(cfformatPath & "bin/cftokens_linux_musl", "777");
+        var cfformat = new cfformat.models.CFFormat(cfformatPath & "bin/", cfformatPath);
+        beanfactory.declare("CFFormat").asValue(cfformat);
+        
+        
+        
+        
+        setBeanFactory(beanFactory);
+        variables.console = variables.beanFactory.getBean("Console");
+        setConsole(variables.console);
+
+
+
+
+        // getConsole();
         console.log("- Initializing LSP Server");
-        getStore(); //Unused, I think we are storing everything in the server scope for the moment
-
-        
-        
-
-        variables.objs = {
-            "lifecycle": new methods.Lifecycle(this, variables.console),
-            "textDocument": new methods.textDocument(this, variables.console),
-            "$": new methods.Util(this, variables.console),
-            "workspace": new methods.Workspace(this, variables.console),
-
-        }
-        server.objs = variables.objs;
 
         variables.initilized = true;
 
@@ -28,61 +41,55 @@ component {
         return this; 
     }
 
-    function getStore(){
-        if(isNull(server.store)){
-            server.store = new Store();
-        }
-        return server.store;
-    }
-
-    function getConsole(){
-        if(isNull(variables.console)){
-            variables.console = new Console(listToArray( "Did Close"));
-        }
-        return variables.console;
-    }
-
     function refresh(){
         initialize();
     }
-
-    function getLspEndpoint(){
-        return variables.lspEndpoint;
-    }
-
-    // shortcut to the Lifecycle config
-    function getConfig(){
-        return variables.objs.lifecycle.getConfig();
-    }
-
-    function getObjects(){
-        return variables.objs;
-    }
-
+    
     public any function execute(required struct jsonMessage, any lspEndpoint) {
         // setup our objects if they are not setup
-        variables.lspEndpoint = lspEndpoint;
+        if(!variables.initilized OR isNull(getBeanFactory())){
+            initialize();
+
+            if(isNull(getBeanFactory())){
+                console.log("Bean Factory is null");
+                throw("Bean Factory is null");
+            }
+        }
+
+        setLspEndpoint(lspEndpoint)
+        // Set the endpoint
+        var ioc = getBeanFactory();
+            ioc.declare("LSPEndpoint").asValue(lspEndpoint);
+
         
         var nullResult = {
             "jsonrpc" : "2.0",
             "result": nullValue()
         }
 
-        if(!variables.initilized){
-            initialize();
-        }
-        
+        var messageStore = ioc.getBean("MessageStore");
+        // var documentStore = ioc.getBean("TextDocumentStore");
+
         // console.log("execute", jsonMessage);
         // console.log("Request[#jsonMessage.method#]: ", jsonMessage);
         // Log the incoming message
-        getStore().addMessage(jsonMessage.id ?: nullValue(), jsonMessage.method ?: "unknown", "request", jsonMessage);
-        
+        messageStore.addMessage(
+                id: jsonMessage.id ?: nullValue(), 
+                method: jsonMessage.method ?: "unknown", 
+                type: "request", 
+                message: jsonMessage);
+
         var message = jsonMessage;
 
         if(!message.keyExists("method")){
             // We dont know what to do so we shouldnt do anything
             // return "{}";
-            getStore().addMessage(jsonMessage.id ?: nullValue(), "err:no_method", "response", nullResult);
+            messageStore.addMessage(
+                id:jsonMessage.id ?: nullValue(),
+                method: "err:no_method",
+                type: "response",
+                message: nullResult);
+
             return nullResult;
         }
 
@@ -101,35 +108,33 @@ component {
 
       
 
-        if( !variables.objs.keyExists(object) ){
-            // Dont know what to do
-            getStore().addMessage(jsonMessage.id ?: nullValue(), "err:no_object", "response", nullResult);
-            // return nullResult;
-          
-        }
 
         var resp = {};
-        if(object == "textDocument"){
-            var textDocument =  new methods.textDocument(this, variables.console);
-            resp = textDocument[method](message);
-            
+        
+        if( !ioc.containsBean(object) ){
+            // Dont know what to do
+            messageStore.addMessage(
+                id: jsonMessage.id ?: nullValue(), 
+                method: "err:no_object", 
+                type: "response", 
+                message: nullResult);
+            return nullResult;
         }
-        else {
-            resp = variables.objs[object][method](message);
-
-        }
-        // console.log("Object: ",  object, "Method: ",  method);
 
 
-        // if(isNull(resp)){
-        //     getStore().addMessage(jsonMessage.id ?: nullValue(), "err:null_response", "response", nullResult);
-        //     // return;
+        var service = ioc.getBean(object);
+
+
+        
+        // if( !variables.objs.keyExists(object) ){
+        //     // Dont know what to do
+        //     getStore().addMessage(jsonMessage.id ?: nullValue(), "err:no_object", "response", nullResult);
+        //     // return nullResult;
+          
         // }
-
         
-        //  the adding of the message id and rpc
-
-        
+        resp = service[method](message);
+       
         
         // If it is not a notification, we need to return a response
         if(message.keyExists("id") && !isNull(resp)){
@@ -137,8 +142,12 @@ component {
             resp.id = message.id;
             // Find out which Object to use
             // console.log("Response[#jsonMessage.method#]: ", resp);
-
-            getStore().addMessage(message.id, jsonMessage.method, "response", resp);
+            messageStore.addMessage(
+                id: jsonMessage.id ?: nullValue(), 
+                method: jsonMessage.method ?: "unknown", 
+                type: "response", 
+                message: resp);
+           
 
 
             return serializeJSON( resp );
