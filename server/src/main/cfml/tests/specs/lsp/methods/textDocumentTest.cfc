@@ -1,6 +1,64 @@
 component extends="testbox.system.BaseSpec" {
 
   function run(){
+
+
+    describe("format", ()=>{
+      var documentStore = createMock("lsp.TextDocumentStore");
+      
+
+      var configStore = new lsp.ConfigStore(
+        Config={
+          "rootURI":"/tmp"
+        }
+      );
+        
+      
+      var cfFormat = createMock("cfformat.models.CFFormat");
+      cfFormat.$("formatFile", "FORMATTED");
+        
+      var textDocument =  new lsp.methods.textDocument();
+          textDocument.setTextDocumentStore(documentStore);
+          textDocument.setConfigStore(configStore);
+          textDocument.setCFFormat(cfFormat);
+
+
+      var td = new lsp.beans.TextDocumentItem(argumentCollection={
+        "uri":"file:///path/to/file.cfc",
+        "languageId":"cfml",
+        "version":1,
+        "text":"<cfscript></cfscript>"
+      });
+      
+      prepareMock(textDocument);
+      textDocument.$("findConfigFile", "{}");
+
+      makePublic(textDocument, "findConfigFile");
+
+      documentStore.$("getDocument").$args("file:///path/to/file.cfc").$results( td );
+
+      it( "should format a document", function(){
+
+        var ret = textDocument.formatting({
+          "jsonrpc": "2.0",
+          "id": 1,
+          "method": "textDocument/format",
+          "params": {
+            "textDocument": {
+              "uri": "file:///path/to/file.cfc"
+            }
+          }
+        });
+
+        expect(ret).toBeStruct();
+        expect(ret).toHaveKey("jsonrpc");
+
+        //TODO: Validate this struct to schema
+
+        debug(ret);
+      
+      });
+    });
     describe("updateDocument", ()=>{
 
       // Configure the BeanFactory:

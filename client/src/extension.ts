@@ -25,7 +25,7 @@ import { Status, StatusBarEntry } from './utils/status';
 
 let lspPort: number = 2089;
 let serverPort: number = 4000;
-const startLucee: boolean = false; //Set to false if you want to use your own server
+const startLucee: boolean = true; //Set to false if you want to use your own server
 const socket_timeout = 5000; //Not used, this would be a timeout for the startServer function
 const outputChannel = window.createOutputChannel("CFML Formatter");
 let lspjar: String;

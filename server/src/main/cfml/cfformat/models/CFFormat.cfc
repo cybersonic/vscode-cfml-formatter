@@ -15,8 +15,17 @@ component accessors="true" {
         variables.tagData = deserializeJSON(fileRead(rootFolder & 'data/tags.json'));
         variables.platform = getPlatform();
         variables.lf = platform == 'windows' ? chr(13) & chr(10) : chr(10);
-
-        variables.executable = binFolder & 'cftokens' & (platform == 'windows' ? '.exe' : '');
+        variables.executable = binFolder & 'cftokens';
+        
+        if(platform == 'windows') {
+            variables.executable = binFolder & 'cftokens.exe';
+        } else if(platform == 'osx') {
+            variables.executable = binFolder & 'cftokens_osx';
+        } else {
+            variables.executable = binFolder & 'cftokens_linux';
+        }
+       
+        
 
         this.cfscript = new CFScript(this);
         this.cftags = new CFTags(this);

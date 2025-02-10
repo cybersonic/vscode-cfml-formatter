@@ -1,6 +1,5 @@
 component accessors="true" {
-   
-    property name="Config";
 
+    property name="Config" type="struct";
 
 }

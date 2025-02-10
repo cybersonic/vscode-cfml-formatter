@@ -229,7 +229,8 @@ component accessors="true" {
         FileWrite(filename, theDoc);
         // TODO: figure out how we get these, either from file or as a .cfformat file 
         var settings={};
-        var loadSettings = findConfigFile(message.params.textDocument.uri, getConfigStore().getConfig().rootURI);
+        var rootURI=getConfigStore().getConfig().rootURI;
+        var loadSettings = findConfigFile(message.params.textDocument.uri,rootURI);
         if(isJSON(loadSettings)){
             settings = deserializeJSON(loadSettings);
         }
