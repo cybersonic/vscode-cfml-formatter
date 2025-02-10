@@ -5,9 +5,10 @@ CFML formatter is a Visual Studio Code extension that provides formatting for CF
 Under the hood it uses a Lucee Language Server to provide the formatting capabilities. 
 
 ## Features
-- Format CFML files using cfformat. 
+- Format CFML files using cfformat right in the editor
+![Right click format](assets/RightClickFormat.gif "Right click format")
 - Triggered on Save or via VSCode's `Format Document` command (`Shift` + `Alt` + `F`)
-
+![Format on Save](assets/FormatOnSave.gif "Format on Save")
 ## Development
 
 ### Requirements
