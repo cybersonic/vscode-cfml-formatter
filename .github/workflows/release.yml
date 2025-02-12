@@ -14,6 +14,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Debug Secrets (Masked)
+        run: echo "VSCE_PAT is set"
+        if: env.VSCE_PAT != ''
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -38,7 +44,7 @@ jobs:
           maven-version: '3.9.6'
 
       - name: Authenticate with VSCode Marketplace
-        run: echo "$VSCE_PAT" | vsce login $VSCODE_PUBLISHER
+        run: echo "${VSCE_PAT}" | vsce login ${VSCODE_PUBLISHER}
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
           VSCODE_PUBLISHER: ${{ secrets.VSCODE_PUBLISHER }}
