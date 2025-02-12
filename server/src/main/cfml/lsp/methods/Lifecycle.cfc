@@ -8,27 +8,27 @@ component accessors="true" {
 
     variables.config = {};
 
-    
-    
-
     function initialize(message) {
-        
-        if(message.keyExists("params")){
+        if (message.keyExists('params')) {
             getConfigStore().setConfig(message.params);
-            
         }
 
-        if(variables.config.keyExists("rootPath")){
+        if (variables.config.keyExists('rootPath')) {
             // Now we got the configuration, lets read all the files to get the cfformat files.
-            var cfformatfiles = DirectoryList(variables.config.rootPath, true, "array", "*.cfformat.json");
-            for(var file in cfformatfiles){
-                var content = FileRead(file);
-                server.documents["file://"&file] = content;
+            var cfformatfiles = directoryList(
+                variables.config.rootPath,
+                true,
+                'array',
+                '*.cfformat.json'
+            );
+            for (var file in cfformatfiles) {
+                var content = fileRead(file);
+                server.documents['file://' & file] = content;
             }
         }
         return {
-            "result": {
-                "capabilities": {
+            'result': {
+                'capabilities': {
                     // "completionProvider": {},
                     /**
                      * Defines how text documents are synced. Is either a detailed structure
@@ -36,59 +36,49 @@ component accessors="true" {
                      * TextDocumentSyncKind number. If omitted it defaults to
                      * `TextDocumentSyncKind.None`.
                      */
-                    "textDocumentSync": 1,
-                    "documentFormattingProvider": true,
+                    'textDocumentSync': 1,
+                    'documentFormattingProvider': true,
                     // "documentRangeFormattingProvider": true,
-                    "diagnosticProvider": {
-                        "interFileDependencies": false,
-                        "workspaceDiagnostics": false
-                    },
+                    'diagnosticProvider': {'interFileDependencies': false, 'workspaceDiagnostics': true},
                     // "codeActionProvider": true,
-                    "workspace": {
-                        "workspaceFolders": {
-                            "supported": true,
-                            "changeNotifications": true
-                        },
-                        "configuration": true,
-                        "didChangeConfiguration": true,
+                    'workspace': {
+                        'workspaceFolders': {'supported': true, 'changeNotifications': true},
+                        'configuration': true,
+                        'didChangeConfiguration': true,
                         /**
-                        * The client has support for file requests/notifications.
-                        *
-                        * @since 3.16.0
-                        */
-                        "fileOperations": {
+                         * The client has support for file requests/notifications.
+                         *
+                         * @since 3.16.0
+                         */
+                        'fileOperations': {
                             /**
                              * The server is interested in receiving didCreateFiles
                              * notifications.
                              */
-                            "didCreate": "file",
+                            'didCreate': 'file',
                             /**
                              * The server is interested in receiving willCreateFiles requests.
                              */
-                            "willCreate": "file",
-
+                            'willCreate': 'file',
                             /**
                              * The server is interested in receiving didRenameFiles
                              * notifications.
                              */
-                            "didRename": "file",
-
+                            'didRename': 'file',
                             /**
                              * The server is interested in receiving willRenameFiles requests.
                              */
-                            "willRename": "file",
-
+                            'willRename': 'file',
                             /**
                              * The server is interested in receiving didDeleteFiles file
                              * notifications.
                              */
-                            "didDelete": "file",
-
+                            'didDelete': 'file',
                             /**
                              * The server is interested in receiving willDeleteFiles file
                              * requests.
                              */
-                            "willDelete": "file"
+                            'willDelete': 'file'
                         }
                     }
                 }
@@ -97,20 +87,15 @@ component accessors="true" {
     }
 
     function initialized(message) {
-        return {
-            "result": {}
-        };
+        return {'result': {}};
     }
 
     function shutdown(message) {
         server.documents = {};
-        return {
-            "result": {}
-        };
+        return {'result': {}};
     }
     function exit(message) {
-        return {
-            "result": 1
-        };
+        return {'result': 1};
     }
+
 }

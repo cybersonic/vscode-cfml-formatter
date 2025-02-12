@@ -1,4 +1,5 @@
 component accessors="true" {
+
     import java.net.URL;
     property name="documents";
     property name="LSPServer";
@@ -8,180 +9,136 @@ component accessors="true" {
     property name="TextDocumentStore";
     property name="beanFactory";
 
-    public function init(){
+    public function init() {
         return this;
     }
 
-    private textDocumentItem function updateDocument( required struct textDocument ){
-
-        var textDocumentItem = getBeanFactory().injectProperties("textDocumentItem", arguments.textDocument);
-        var cfformat = getBeanFactory().getBean("CFFormat");
-
-        var uri = textDocumentItem.getURI();
-        var text = textDocumentItem.getText();
-        
-        // write it 
-        var fileHash = "/tmp/#Hash(uri)#";
-        var fileExtension = listLast(uri, ".");
-        var fileName = "#fileHash#.#fileExtension#";
-        FileWrite(fileName, text);
-
-        var tokens = cfformat.cftokensFile("tokenize", fileName);
-        var parsed = cfformat.cftokensFile("parse", fileName);
-            
-        textDocumentItem.setTokens(tokens);
-        textDocumentItem.setParsed(parsed);
-
-        getTextDocumentStore().updateDocument(textDocumentItem);
+    private textDocumentItem function updateDocument(required struct textDocument) {
+        var textDocumentItem = getTextDocumentStore().saveTextDocument(textDocument);
         return textDocumentItem;
     }
 
-    public void function didClose( required struct message ){
+    public void function didClose(required struct message) {
         // console.log("Did Close", message);
         getTextDocumentStore().deleteDocument(message.params.textDocument.uri);
-        
     }
-    public void function didOpen( required struct message ){
+    public void function didOpen(required struct message) {
         updateDocument(message.params.textDocument);
     }
 
 
-    public void function didChange( required struct message ){
+    public void function didChange(required struct message) {
         // TODO: Check what is in the content Changes. We are doing full sync for now.
-        console.log("didChange", message.params);
+        console.log('didChange', message.params);
 
         var textDocument = {
-            "uri": message.params.textDocument.uri,
-            "version": message.params.textDocument.version,
-            "text": message.params.contentChanges[1].text
+            'uri': message.params.textDocument.uri,
+            'version': message.params.textDocument.version,
+            'text': message.params.contentChanges[1].text
         };
         updateDocument(textDocument);
 
-        // variables.lspserver 
+        // variables.lspserver
 
         // var diagnostics = diagnostic(message);
 
         // var lspEndpoint =  variables.lspserver.getLspEndpoint();
         //     lspEndpoint.sendMessageToClient(diagnostics);
     }
-    
-    public struct function completion(required struct message){
+
+    public struct function completion(required struct message) {
         // Returns a completion thing.
 
         return {
-            "jsonrpc": "2.0",
-            "id": message.id,
-            "result": [
-                {
-                    "label": "test",
-                },
-                {
-                    "label": "test1",
-                },
-                {
-                    "label": "test2",
-                }
-            ]
-
+            'jsonrpc': '2.0',
+            'id': message.id,
+            'result': [{'label': 'test'}, {'label': 'test1'}, {'label': 'test2'}]
         }
     }
 
     /**
      * This returns the config file contents, or {} if none found
-     * @from the file from where to search , in the format file:///Users/etc. 
-     * @to usually the root of the worspace. 
+     * @from the file from where to search , in the format file:///Users/etc.
+     * @to usually the root of the worspace.
      */
-    private string function findConfigFile(from, to){
-        // Make them into URIs. 
+    private string function findConfigFile(from, to) {
+        // Make them into URIs.
         var fromFile = new URL(from);
         var fromPath = getDirectoryFromPath(fromFile.getPath());
         var toDir = new URL(to);
         var toPath = toDir.getPath();
 
-       
-        
-        
+
+
+
         param name="server.documents" default="#{}#";
 
-        // If we have an item next to it. But we should look in the docs first. 
-        var nearestCFFormat = "file://" & fromPath & ".cfformat.json";
-      
-        if(server.documents.keyExists(nearestCFFormat)){
+        // If we have an item next to it. But we should look in the docs first.
+        var nearestCFFormat = 'file://' & fromPath & '.cfformat.json';
+
+        if (server.documents.keyExists(nearestCFFormat)) {
             return server.documents[nearestCFFormat];
         }
         // Otherwise check the actual filesystem
-        if(fileExists(fromPath & ".cfformat.json")){
+        if (fileExists(fromPath & '.cfformat.json')) {
             // dump("Found in Filesystem #fromPath#.cfformat.json");
-            return FileRead(fromPath & ".cfformat.json");
+            return fileRead(fromPath & '.cfformat.json');
         }
 
-        var fromPathArr = listToArray(fromPAth, "/");
-        var toPathArr = listToArray(toPath, "/");
-           
+        var fromPathArr = listToArray(fromPAth, '/');
+        var toPathArr = listToArray(toPath, '/');
+
 
         loop from="#fromPathArr.len()#" to="#toPathArr.len()#" step="-1" index="dirIndex" {
-            var formatFilePath = arraySlice(fromPathArr, 1, dirIndex).toList("/");
-                formatFilePath = "/" & formatFilePath & "/.cfformat.json";
-                
-            var nearestCFFormat = "file://" & formatFilePath;
+            var formatFilePath = arraySlice(fromPathArr, 1, dirIndex).toList('/');
+            formatFilePath = '/' & formatFilePath & '/.cfformat.json';
 
-            if(server.documents.keyExists(nearestCFFormat)){
+            var nearestCFFormat = 'file://' & formatFilePath;
+
+            if (server.documents.keyExists(nearestCFFormat)) {
                 // dump("Found in Server #nearestCFFormat#");
                 return server.documents[nearestCFFormat];
             }
             // Otherwise check the actual filesystem
-            if(fileExists(formatFilePath)){
-                return FileRead(formatFilePath);
+            if (fileExists(formatFilePath)) {
+                return fileRead(formatFilePath);
             }
+        }
 
-        }   
-        
-        return "{}";
+        return '{}';
     }
-    
-    
+
+
     /**
      * TODO: implement
      *
-     * @message 
+     * @message
      */
-    private function rangeFormatting(required struct message){
-
-      
-        var cfformatPath=expandPath('/cfformat/');
-        variables.cfformat = new cfformat.models.CFFormat(cfformatPath & "bin/", cfformatPath);
-        // get the docuiment append something to it and do some magic. 
-        fileSetAccessMode(cfformatPath & "bin/cftokens", "777");
+    private function rangeFormatting(required struct message) {
+        var cfformatPath = expandPath('/cfformat/');
+        variables.cfformat = new cfformat.models.CFFormat(cfformatPath & 'bin/', cfformatPath);
+        // get the docuiment append something to it and do some magic.
+        fileSetAccessMode(cfformatPath & 'bin/cftokens', '777');
 
         var theDoc = _getDoc(message.params.textDocument.uri);
         var range = message.params.range;
         var lines = getLines(theDoc);
-        var selectedLines = arraySlice(lines, range.start.line + 1, range.end.line - range.start.line + 1) ;
-     
+        var selectedLines = arraySlice(lines, range.start.line + 1, range.end.line - range.start.line + 1);
+
         selectedLines = selectedLines.toList(server.separator.line);
-        var extension  = listLast(message.params.textDocument.uri, ".");
-        var filename = "/tmp/#Hash(message.params.textDocument.uri)#.#extension#";
-        
-        FileWrite(filename, selectedLines);
-        var settings={};
+        var extension = listLast(message.params.textDocument.uri, '.');
+        var filename = '/tmp/#hash(message.params.textDocument.uri)#.#extension#';
+
+        fileWrite(filename, selectedLines);
+        var settings = {};
 
         // This gets the actual config as JSON
         var configFile = findConfigFile(message.params.textDocument.uri, getConfigStore().getConfig().rootUri);
-        if(!isNull(configFile) && isJSON(server.documents[configFile])){
-            settings = deserializeJson(server.documents[configFile]);
+        if (!isNull(configFile) && isJSON(server.documents[configFile])) {
+            settings = deserializeJSON(server.documents[configFile]);
         }
-        var formattedDoc  = getCFFormat().formatFile(filename,settings);
-        return {
-            "jsonrpc": "2.0",
-            "id": message.id,
-            "result": [
-                {
-                    "range": range,
-                    "newText": formattedDoc
-                }
-            ]
-
-        };
+        var formattedDoc = getCFFormat().formatFile(filename, settings);
+        return {'jsonrpc': '2.0', 'id': message.id, 'result': [{'range': range, 'newText': formattedDoc}]};
     }
 
 
@@ -208,88 +165,82 @@ component accessors="true" {
     //         }
     //       }
     // }
-          
 
-    public struct function formatting(required struct message){
-    
+
+    public struct function formatting(required struct message) {
         var theDoc = getTextDocumentStore().getDocument(arguments.message.params.textDocument.uri);
-        
+
         // Need to return an error , rather than a blank result.
-        if(isNull(theDoc)){
-            return {
-                "jsonrpc": "2.0",
-                "id": message.id,
-                "result": []
-            }
+        if (isNull(theDoc)) {
+            return {'jsonrpc': '2.0', 'id': message.id, 'result': []}
         }
         // Have to save the file to disk and then run the formatter on it.
-        var extension  = listLast(message.params.textDocument.uri, ".");
-        var filename = "/tmp/#Hash(message.params.textDocument.uri)#.#extension#";
+        var extension = listLast(message.params.textDocument.uri, '.');
+        var filename = '/tmp/#hash(message.params.textDocument.uri)#.#extension#';
 
-        FileWrite(filename, theDoc);
-        // TODO: figure out how we get these, either from file or as a .cfformat file 
-        var settings={};
-        var rootURI=getConfigStore().getConfig().rootURI;
-        var loadSettings = findConfigFile(message.params.textDocument.uri,rootURI);
-        if(isJSON(loadSettings)){
+        fileWrite(filename, theDoc);
+        // TODO: figure out how we get these, either from file or as a .cfformat file
+        var settings = {};
+        var rootURI = getConfigStore().getConfig().rootURI;
+        var loadSettings = findConfigFile(message.params.textDocument.uri, rootURI);
+        if (isJSON(loadSettings)) {
             settings = deserializeJSON(loadSettings);
         }
         // console.log("Config Settings", settings);
-        
+
         var originalLines = getLines(theDoc);
 
-        var formattedDoc  = getCFFormat().formatFile(filename,settings);
+        var formattedDoc = getCFFormat().formatFile(filename, settings);
 
         return {
-            "jsonrpc": "2.0",
-            "id": message.id,
-            "result": [
+            'jsonrpc': '2.0',
+            'id': message.id,
+            'result': [
                 {
-                    "range": {
-                        "start": { "line": 0, "character": 0 },
-                        "end" : { "line": originalLines.len(), "character": originalLines.last().len()}
+                    'range': {
+                        'start': {'line': 0, 'character': 0},
+                        'end': {'line': originalLines.len(), 'character': originalLines.last().len()}
                     },
-                    "newText": formattedDoc
+                    'newText': formattedDoc
                 }
             ]
-
         }
     }
 
-    private function getLines( required string text ){
-        
-        var lines = ListToArray(text, chr(10)&chr(13), true);
+    private function getLines(required string text) {
+        var lines = listToArray(text, chr(10) & chr(13), true);
         return lines;
     }
-    private function getCharacters( required string text ){
-        return ListToArray(text, "", true);
+    private function getCharacters(required string text) {
+        return listToArray(text, '', true);
     }
 
-    public void function onMissingMethod(required string methodName, required array args){
-        getConsole().log("Missing Method", methodName, args);
+    public void function onMissingMethod(required string methodName, required array args) {
+        getConsole().log('Missing Method', methodName, args);
     }
 
-    
+
 
     // public any function convertTagToScript(required string tagCFML) {
-        
+
     //     var toScript =  new cfscriptme.models.toscript.ToScript();
     //     var ret = toScript.toScript(fileContent=tagCFML);
-        
+
     //     return ret;
     // }
-    
+
     // public any function codeAction(required struct message){
     //     console.log(message);
     //     return {
     //         "jsonrpc": "2.0",
     //         "id": message.id,
     //         "result": [
-                
+
     //             'refactor.rewrite'
-                
+
     //         ]
 
     //     }
     // }
+
 }

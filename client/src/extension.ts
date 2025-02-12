@@ -70,7 +70,7 @@ export async function activate(context: ExtensionContext) {
 
   LOG.info("LSP Extension Port {}", lspPort);
   LOG.info("LSP Extension Web Server Port {}", serverPort);
-  
+
   if (startLucee) {
 
     LOG.info("Starting Lucee LSP Server");
@@ -79,8 +79,8 @@ export async function activate(context: ExtensionContext) {
       title: "Starting Lucee LSP Server",
       cancellable: false
     }, async (progress, token) => {
-       
-      }
+
+    }
     );
 
     // startServer(javaPath, [`-Dlucee.lsp.port=${lspPort}`, `-Dlucee.server.port=${serverPort}`, `-Dlucee.server.wardir=/tmp`, "-jar", lspjar], outputChannel);
@@ -92,7 +92,7 @@ export async function activate(context: ExtensionContext) {
   else {
     LOG.info("Not Starting Lucee LSP Server, using existing server on port {}", lspPort);
   }
-  
+
   LOG.info("Connecting to Lucee LSP Server on port: {}", lspPort);
   const socketTimeout = 5000;
 
@@ -177,8 +177,13 @@ export async function activate(context: ExtensionContext) {
     // Register the server for all documents by default
     documentSelector: [{ scheme: "file", language: "cfml" }],
     synchronize: {
-      // Notify the server about file changes to '.cfformat files contained in the workspace
-      fileEvents: [workspace.createFileSystemWatcher("**/.cfformat.json"), workspace.createFileSystemWatcher("**/.cfformat")],
+      // Notify the server about file changes to varioius config files contained in the workspace
+      fileEvents: [
+        workspace.createFileSystemWatcher("**/.cfformat.json"),
+        workspace.createFileSystemWatcher("**/.cfformat"),
+        workspace.createFileSystemWatcher("**/.cfrules.json"),
+        workspace.createFileSystemWatcher("**/.cfrules")
+      ],
       configurationSection: "cfml-formatter"
     }
   };

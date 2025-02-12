@@ -9,6 +9,8 @@
 </head>
 <body>
     <cfscript>
+        param name="FORM.ignorefilter" default="";
+        param name="FORM.msgCount" default=50;
         cs=getPageContext().getConfig().getConfigServerImpl();
         instance=createObject("java","lucee.runtime.lsp.LSPEndpointFactory").getExistingInstance();
         comp = instance.getComponent();
@@ -92,10 +94,26 @@
             <div class="col-md-6">
                 <h3>Message Log</h3>
 
-                <cfset messages = messageStore.getMessages()>
-                <cfset msgCount = 20>
-                <cfset from=messages.len()>
-                <cfset to=from LT msgCount ?  1 : messages.len() - msgCount>
+
+                <form  action="index.cfm" method="post">
+                    <input type="text" class="form-control" placeholder="Ignore" id="ignoreFilter" value="#FORM.ignorefilter#" name="ignorefilter">
+                    <input type="number" class="form-control" value="#FORM.msgCount#" name="msgCount">
+                    <button class="btn btn-primary">Filter</button>
+                </form>
+                    
+                <cfset unfiltered = messageStore.getMessages()>
+
+               <cfset filtered = unfiltered.filter(function(item){
+                    var method = item.message.method ?: "";
+                    var respmethod = item.method ?: "";
+                    return NOT (listFindNoCase(FORM.ignorefilter, Trim(method)) OR listFindNoCase(FORM.ignorefilter, Trim(respmethod)) );
+                })>
+
+                <!--- <cfdump var="#filtered.Len()#" label="Filtered">
+                <cfdump var="#unfiltered.Len()#" label="All"> --->
+                <cfset msgCount = FORM.msgCount>
+                <cfset from=filtered.len()>
+                <cfset to=from LT msgCount ?  1 : filtered.len() - msgCount>
                 <cfset to= to LT 1 ? 1 : to>
                 <table class="table table-sm">
                     <thead>
@@ -117,9 +135,9 @@
                         <cfloop from="#from#" to="#to#" index="idx" step="-1">
                             
                             <tr>
-                                <cfif messages[idx].type EQ "request">
+                                <cfif filtered[idx].type EQ "request">
                                     <td><i class="bi bi-box-arrow-down"></i></td>
-                                <cfelseif messages[idx].type EQ "response">
+                                <cfelseif filtered[idx].type EQ "response">
                                     <td><i class="bi bi-box-arrow-up"></i></td>
                                 <cfelse>
                                     <td>?</td>
@@ -127,16 +145,16 @@
 
                                 
                                 <td>#idx#</td>
-                                <td>#messages[idx].id?:"-"#</td>
-                                <td>#messages[idx].method?:"-"#</td>
-                                <td>#messages[idx].type#</td>
+                                <td>#filtered[idx].id?:"-"#</td>
+                                <td>#filtered[idx].method?:"-"#</td>
+                                <td>#filtered[idx].type#</td>
 
                                 <td>
-                                    <cfif listFindNoCase("textDocument/didOpen,textDocument/didSave,textDocument/didClose,textDocument/didChange",  #messages[idx].method#)>
-                                        <i class="bi bi-file-code"></i>#relativePath(messages[idx].message.params.textDocument.uri)#
+                                    <cfif listFindNoCase("textDocument/didOpen,textDocument/didSave,textDocument/didClose,textDocument/didChange",  #filtered[idx].method#)>
+                                        <i class="bi bi-file-code"></i>#relativePath(filtered[idx].message.params.textDocument.uri)#
                                     </cfif>
                                     
-                                    <!--- <cfif messages[idx].method EQ "textDocument/rangeFormatting">
+                                    <!--- <cfif filtered[idx].method EQ "textDocument/rangeFormatting">
                                         <cfscript>
                                             rangeFormat = server.objs.textDocument.rangeFormatting({
                                                 "jsonrpc": "2.0",
@@ -170,7 +188,7 @@
                                     
                                     <button class="btn btn-primary" data-detail="#idx#"><i class="bi bi-arrow-down-circle-fill"></i></button>
                                     <div id="detail-#idx#" style="display:none;">
-                                        <cfdump var="#messages[idx].message#">
+                                        <cfdump var="#filtered[idx].message#">
 
                                         
                                     </div>
