@@ -1,0 +1,67 @@
+name: Build and Publish VSCode Extension
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual triggering
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    name: Build and Publish VSCode Extension
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Install VSCE (VSCode Extension Manager)
+        run: npm install -g @vscode/vsce
+
+      - name: Install Ant
+        run: sudo apt-get install -y ant
+
+      - name: Install Maven
+        uses: s4u/setup-maven-action@v1
+        with:
+          maven-version: '3.9.6'
+
+      - name: Authenticate with VSCode Marketplace
+        run: echo "$VSCE_PAT" | vsce login $VSCODE_PUBLISHER
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          VSCODE_PUBLISHER: ${{ secrets.VSCODE_PUBLISHER }}
+
+      - name: Build and Publish Extension
+        run: npm run vscode:publish
+
+      - name: Package VSIX File
+        run: vsce package
+
+      - name: Get Package Version
+        id: package_version
+        run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: Release v${{ env.VERSION }}
+          body: "VSCode Extension version ${{ env.VERSION }}"
+          draft: false
+          prerelease: false
+          files: "*.vsix"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
