@@ -17,31 +17,6 @@ We are also including a new project, CFRules which allows a team to share file n
 ![Right click format](assets/RightClickFormat.gif "Right click format")
 - Triggered on Save or via VSCode's `Format Document` command (`Shift` + `Alt` + `F`)
 ![Format on Save](assets/FormatOnSave.gif "Format on Save")
-## Development
-
-### Requirements
-- Java 11 to run the LSP server
-- Ant and Maven
-- Node.js and npm
-- VS Code and vscx `npm install -g vsce`
-
-### Building and Packaging
-- Run `npm run vscode:pacakge`
-
-This will create a cfml-formatter-0.0.1.vsix file in the root of the project. You can install this in VS Code by running `code --install-extension cfml-formatter-0.0.1.vsix`
-
-### Under the hood
-
-The extension is split into a client (written in TypeScript) and a server (written in CFML). The client is responsible for handling the UI and sending requests to the server. The server is responsible for formatting the CFML code.
-
-The Server is a lucee server being run from [App.java](server/src/main/java/org/lucee/App.java) which is an embedded version of tomcat that is packaged up as a .jar file with the whole Language Server Code being written as a Lucee WAR and dynamically expanded. 
-
-Each instance of VSCode will start it's own server on a different port. This is by design as VSCode extensions are responsible for the subprocess (running `java -jar resources/lucee_lsp-1.0-all.jar`) and start and stop instances with each new Workspace window that is opened.
-
-The client is responsible for sending  textDocument and workspace requests to the server and then handling the responses. The LSP is basically the "brains" of the extension and uses CFFormat and CFTokens to format the code as well as doing other functions that a LSP can do. 
-
-## Known Issues
-- We dont check for the java version and assume you have Java 11 installed, if you dont you will see an error in the output window
 
 ### CFFormat and CFRules files
 So that you can manage how you want your code to be formatted, you can create a `.cfformat.json` file in the root of your project. You can read more about cfFormat [here](https://www.forgebox.io/view/commandbox-cfformat). An easy way to create `.cfformat.json` file is to run `box cfformat settings wizard" and it will generate the file for you.
@@ -111,6 +86,7 @@ examples:
     ],
     ...
 }
+```
 
 `folder_not_allowed` rule definition:
 
@@ -124,3 +100,30 @@ examples:
 
 #### File Rules
 TBD. See: https://github.com/cybersonic/vscode-cfml-formatter/issues/3
+
+
+## Development
+
+### Requirements
+- Java 11 to run the LSP server
+- Ant and Maven
+- Node.js and npm
+- VS Code and vscx `npm install -g vsce`
+
+### Building and Packaging
+- Run `npm run vscode:pacakge`
+
+This will create a cfml-formatter-0.0.1.vsix file in the root of the project. You can install this in VS Code by running `code --install-extension cfml-formatter-0.0.1.vsix`
+
+### Under the hood
+
+The extension is split into a client (written in TypeScript) and a server (written in CFML). The client is responsible for handling the UI and sending requests to the server. The server is responsible for formatting the CFML code.
+
+The Server is a lucee server being run from [App.java](server/src/main/java/org/lucee/App.java) which is an embedded version of tomcat that is packaged up as a .jar file with the whole Language Server Code being written as a Lucee WAR and dynamically expanded. 
+
+Each instance of VSCode will start it's own server on a different port. This is by design as VSCode extensions are responsible for the subprocess (running `java -jar resources/lucee_lsp-1.0-all.jar`) and start and stop instances with each new Workspace window that is opened.
+
+The client is responsible for sending  textDocument and workspace requests to the server and then handling the responses. The LSP is basically the "brains" of the extension and uses CFFormat and CFTokens to format the code as well as doing other functions that a LSP can do. 
+
+## Known Issues
+- We dont check for the java version and assume you have Java 11 installed, if you dont you will see an error in the output window
