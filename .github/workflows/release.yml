@@ -34,7 +34,7 @@ jobs:
         run: sudo apt-get install -y ant
 
       - name: Install Maven
-        uses: s4u/setup-maven-action@v1
+        uses: s4u/setup-maven-action@v1.18.0
         with:
           maven-version: '3.9.6'
 
