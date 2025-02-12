@@ -4,10 +4,8 @@ component accessors="true" {
     property name="rules";
     property name="rootPath";
 
-    function init(struct rules = '{}', string rootPath = '') {
+    function init(struct rules = '{}', string rootPath = '/tmp') {
         setRules(arguments.rules);
-
-
         if (!arguments.rootPath.endsWith(server.separator.file)) {
             arguments.rootPath &= server.separator.file;
         }
@@ -62,12 +60,12 @@ component accessors="true" {
     array function extension_not_allowed(struct rule) {
         var foundItems = [];
         var path = getRootPath() & (rule.path ?: '');
-        if (!directoryExists(path)) {
+        if (!localDirectoryExists(path)) {
             throw('Directory [#path#]  does not exist');
         }
 
 
-        var files = directoryList(
+        var files = localDirectoryList(
             path: path,
             recurse: true,
             listInfo: 'array',
@@ -79,7 +77,7 @@ component accessors="true" {
 
         var foundItems = files.map(function(file) {
             // Get the end line
-            var content = fileRead(file);
+            var content = localfileRead(file);
             var lines = listToArray(content, server.separator.line, true);
             
 
@@ -87,18 +85,26 @@ component accessors="true" {
             if (linecount < 0) {
                 linecount = 0;
             }
-            return {
+
+            var ret = {
                 'range': {'start': {'line': 0, 'character': 0}, 'end': {'line': linecount, 'character': 0}},
                 'severity': rule.severity,
                 'message': rule.message,
-                'codeDescription':{
-                    'href': "https://google.com"
-                },
                 'code': "extension_not_allowed",
                 'source': 'CFRules',
                 'uri': 'file://' & file,
-                'tags': []
+                // 'tags': []
             };
+
+            // 'codeDescription':{
+            //         'href': "https://google.com"
+            //     },
+            if(rule.keyExists('href')){
+                ret["codeDescription"] = {
+                    'href': rule.href
+                };
+            }
+            return ret;
         });
 
         return foundItems;
@@ -111,32 +117,59 @@ component accessors="true" {
      */array function folder_not_allowed(struct rule) {
         var foundItems = [];
         var path = getRootPath() & (rule.path ?: '');
-        if (!directoryExists(path)) {
+        if (!localDirectoryExists(path)) {
             throw('Directory [#path#]  does not exist');
         }
-        var folders = directoryList(
+        var folders = localDirectoryList(
             path: path,
-            recurse: false,
+            recurse: true,
             listInfo: 'array',
             filter: '#rule.value#',
             type: 'dir'
         );
 
         var foundItems = folders.map(function(folder) {
-            return {
+
+            var ret = {
                 'range': {'start': {'line': 0, 'character': 0}, 'end': {'line': 0, 'character': 0}},
                 'severity': rule.severity,
                 'message': rule.message,
-                'codeDescription':{
-                    'href': "https://google.com"
-                },
                 'code': "folder_not_allowed",
                 'source': 'CFRules',
                 'uri': 'file://' & folder
             };
+
+            if(rule.keyExists('href')){
+                ret["codeDescription"] = {
+                    'href': rule.href
+                };
+            }
+           
+            return ret;
         });
 
         return foundItems;
     }
 
+
+    string function localFileRead(required string path){
+        return fileRead(arguments.path);
+    }
+    boolean function localDirectoryExists(required string path){
+        return directoryExists(arguments.path);
+    }
+
+    array function localDirectoryList(required string path, boolean recurse=false, string listInfo = 'query', string filter = '', string type = 'all'){
+        dump(arguments);
+        
+        var dirList = directoryList(
+            path: arguments.path,
+            recurse: arguments.recurse,
+            listinfo: arguments.listInfo,
+            filter: arguments.filter,
+            type: arguments.type
+        );
+        
+        return dirList;
+    }
 }
