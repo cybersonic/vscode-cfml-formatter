@@ -54,6 +54,11 @@ component accessors="true" {
         return ret;
     }
 
+    /**
+     * extension_not_allowed checks for file extensions defined in the `value` key of the rule an makes sure that it is not present in the directory defied in the `path` key
+     *
+     * @rule 
+     */
     array function extension_not_allowed(struct rule) {
         var foundItems = [];
         var path = getRootPath() & (rule.path ?: '');
@@ -99,7 +104,11 @@ component accessors="true" {
         return foundItems;
     }
 
-    array function folder_not_allowed(struct rule) {
+    /**
+     * folder_not_allowed checks for folders defined in the `value` key of the rule an makes sure that it is not present in the directory defied in the `path` key
+     *
+     * @rule 
+     */array function folder_not_allowed(struct rule) {
         var foundItems = [];
         var path = getRootPath() & (rule.path ?: '');
         if (!directoryExists(path)) {
