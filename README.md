@@ -1,6 +1,6 @@
 # CFML Formatter
 
-CFML formatter is a Visual Studio Code extension that provides formatting for CFML files using [Lucee Server](https://www.lucee.org/) and [CFFormat]((https://github.com/jcberquist/commandbox-cfformat)
+CFML formatter is a Visual Studio Code extension that provides formatting for CFML files using [Lucee Server](https://www.lucee.org/) and [CFFormat](https://github.com/jcberquist/commandbox-cfformat)
 
 Under the hood it uses a Lucee Language Server to provide the formatting capabilities. 
 

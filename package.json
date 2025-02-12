@@ -5,7 +5,7 @@
   "author": "Mark Drew",
   "preview": true,
   "license": "MIT",
-  "version": "1.0.66",
+  "version": "1.0.68",
   "publisher": "markdrew",
   "repository": {
     "type": "git",
@@ -53,7 +53,8 @@
     "compile": "tsc -b",
     "watch": "tsc -b -w",
     "postinstall": "cd client && npm install && cd ..",
-    "vscode:package": "vsce package --allow-missing-repository"
+    "vscode:package": "vsce package",
+    "vscode:publish": "vsce publish --pre-release"
   },
   "devDependencies": {
     "typescript": "^5.7.3"
