@@ -14,11 +14,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Debug Secrets (Masked)
+      - name: Debug Secrets VSCE_PAT (Masked)
         run: echo "VSCE_PAT is set"
         if: env.VSCE_PAT != ''
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      - name: Debug Secrets VSCODE_PUBLISHER (Masked)
+        run: echo "VSCE_PAT is set"
+        if: env.VSCODE_PUBLISHER != ''
+        env:
+          VSCE_PAT: ${{ secrets.VSCODE_PUBLISHER }}
 
       - name: Checkout Repository
         uses: actions/checkout@v4
