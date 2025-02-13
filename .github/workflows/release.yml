@@ -20,7 +20,7 @@ jobs:
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
-      - name: Debug  VSCODE_PUBLISHER (Masked)
+      - name: Debug VSCODE_PUBLISHER (Masked)
         run: echo "VSCODE_PUBLISHER is set"
         if: env.VSCODE_PUBLISHER != ''
         env:
@@ -50,7 +50,7 @@ jobs:
           maven-version: '3.9.6'
 
       - name: Authenticate with VSCode Marketplace
-        run: echo "$VSCE_PAT" | vsce login $VSCODE_PUBLISHER
+        run: echo "$VSCE_PAT" | vsce login markdrew
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
           VSCODE_PUBLISHER: markdrew
