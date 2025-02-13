@@ -24,7 +24,7 @@ jobs:
         run: echo "VSCODE_PUBLISHER is set"
         if: env.VSCODE_PUBLISHER != ''
         env:
-          VSCODE_PUBLISHER: ${{ secrets.VSCODE_PUBLISHER }}
+          VSCODE_PUBLISHER: ${{ env.VSCODE_PUBLISHER }}
 
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -50,10 +50,10 @@ jobs:
           maven-version: '3.9.6'
 
       - name: Authenticate with VSCode Marketplace
-        run: echo "${VSCE_PAT}" | vsce login ${VSCODE_PUBLISHER}
+        run: echo "$VSCE_PAT" | vsce login $VSCODE_PUBLISHER
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
-          VSCODE_PUBLISHER: ${{ secrets.VSCODE_PUBLISHER }}
+          VSCODE_PUBLISHER: ${{ env.VSCODE_PUBLISHER }}
 
       - name: Build and Publish Extension
         run: npm run vscode:publish
