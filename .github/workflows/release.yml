@@ -14,18 +14,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Debug Secrets VSCE_PAT (Masked)
-        run: echo "VSCE_PAT is set"
-        if: env.VSCE_PAT != ''
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
-
-      - name: Debug VSCODE_PUBLISHER (Masked)
-        run: echo "VSCODE_PUBLISHER is set"
-        if: env.VSCODE_PUBLISHER != ''
-        env:
-          VSCODE_PUBLISHER: markdrew
-
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -49,17 +37,14 @@ jobs:
         with:
           maven-version: '3.9.6'
 
-      - name: Authenticate with VSCode Marketplace
-        run: echo "$VSCE_PAT" | vsce login markdrew
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
-          VSCODE_PUBLISHER: markdrew
-
       - name: Build and Publish Extension
         run: npm run vscode:publish
+        env:
+            VSCE_PAT: ${{ secrets.VSCE_PAT }}
+            VSCODE_PUBLISHER: markdrew
 
       - name: Package VSIX File
-        run: vsce package
+        run: npm run vscode:package
 
       - name: Get Package Version
         id: package_version
