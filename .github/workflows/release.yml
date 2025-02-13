@@ -24,7 +24,7 @@ jobs:
         run: echo "VSCODE_PUBLISHER is set"
         if: env.VSCODE_PUBLISHER != ''
         env:
-          VSCODE_PUBLISHER: ${{ env.VSCODE_PUBLISHER }}
+          VSCODE_PUBLISHER: markdrew
 
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -53,7 +53,7 @@ jobs:
         run: echo "$VSCE_PAT" | vsce login $VSCODE_PUBLISHER
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
-          VSCODE_PUBLISHER: ${{ env.VSCODE_PUBLISHER }}
+          VSCODE_PUBLISHER: markdrew
 
       - name: Build and Publish Extension
         run: npm run vscode:publish
