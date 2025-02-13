@@ -38,7 +38,7 @@ jobs:
           maven-version: '3.9.6'
 
       - name: Build and Publish Extension
-        run: npm run vscode:publish
+        run: npm install && npm run vscode:publish
         env:
             VSCE_PAT: ${{ secrets.VSCE_PAT }}
             VSCODE_PUBLISHER: markdrew
