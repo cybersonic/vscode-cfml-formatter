@@ -39,7 +39,7 @@ component accessors="true" {
                     'textDocumentSync': 1,
                     'documentFormattingProvider': true,
                     // "documentRangeFormattingProvider": true,
-                    'diagnosticProvider': {'interFileDependencies': false, 'workspaceDiagnostics': true},
+                    // 'diagnosticProvider': {'interFileDependencies': false, 'workspaceDiagnostics': true},
                     // "codeActionProvider": true,
                     'workspace': {
                         'workspaceFolders': {'supported': true, 'changeNotifications': true},

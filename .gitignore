@@ -145,3 +145,4 @@ server/src/main/cfml/linter/
 server/src/main/cfml/testbox/
 server/src/main/cfml/cfscriptme/
 server/src/main/cfml/lsp/docs/types.ts
+server/src/main/cfml/cfformat_old/

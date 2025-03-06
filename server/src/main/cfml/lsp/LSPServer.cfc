@@ -46,6 +46,9 @@ component accessors=true {
             }
         }
 
+        //if there is no response. and we have a result key, it's a response. Check in the sent messages by id 
+        
+
         setLspEndpoint(lspEndpoint)
         // Set the endpoint
         var ioc = getBeanFactory();

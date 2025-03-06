@@ -21,10 +21,22 @@
         messageStore = bf.getBean("MessageStore");
         documents = docStore.getDocuments();
 
-
+        // dump(instance);
         
         // dump(instance.getComponent().getObjects().lifecycle.getConfig());
-        // dump(instance.sendMessageToClient("Test Message") );
+        message = {
+            "jsonrpc": "2.0",
+            "method": "workspace/configuration",
+            "id": "666",
+            "params": {
+                "items": [
+                    {
+                        "section": "cfml-formatter"
+                    }
+                ]
+            }
+        }
+        dump(instance.sendMessageToClient(message) );
         
         // dump(instance.processMessage('{"jsonrpc":"2.0","method":"initialized","params":{}}'));
 
