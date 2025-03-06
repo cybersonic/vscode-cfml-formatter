@@ -7,9 +7,10 @@
 # box task run build cftokens
 # cd ../../../../../
 # pwd
-curl -s -o server/src/main/cfml/cfformat/bin/v0.16.12/cftokens.exe  https://github.com/jcberquist/cftokens/releases/download/v0.16.12/cftokens.exe 
-curl -s -o server/src/main/cfml/cfformat/bin/v0.16.12/cftokens_linux https://github.com/jcberquist/cftokens/releases/download/v0.16.12/cftokens_linux
-curl -s -o server/src/main/cfml/cfformat/bin/v0.16.12/cftokens_linux_musl https://github.com/jcberquist/cftokens/releases/download/v0.16.12/cftokens_linux_musl
-curl -s -o server/src/main/cfml/cfformat/bin/v0.16.12/cftokens_osx https://github.com/jcberquist/cftokens/releases/download/v0.16.12/cftokens_osx
-curl -s -o server/src/main/cfml/cfformat/bin/v0.16.12/cftokens_osx_arm https://github.com/jcberquist/cftokens/releases/download/v0.16.12/cftokens_osx_arm
-curl -s -o server/src/main/cfml/cfformat/bin/v0.16.12/cftokens_osx_x86_64 https://github.com/jcberquist/cftokens/releases/download/v0.16.12/cftokens_osx_x86_64
+curl -s -o server/src/main/cfml/cfformat/bin/cftokens.exe  https://github.com/jcberquist/cftokens/releases/download/v0.16.12/cftokens.exe 
+curl -s -o server/src/main/cfml/cfformat/bin/cftokens_linux https://github.com/jcberquist/cftokens/releases/download/v0.16.12/cftokens_linux
+curl -s -o server/src/main/cfml/cfformat/bin/cftokens_linux_musl https://github.com/jcberquist/cftokens/releases/download/v0.16.12/cftokens_linux_musl
+curl -s -o server/src/main/cfml/cfformat/bin/cftokens_osx https://github.com/jcberquist/cftokens/releases/download/v0.16.12/cftokens_osx
+curl -s -o server/src/main/cfml/cfformat/bin/cftokens_osx_arm https://github.com/jcberquist/cftokens/releases/download/v0.16.12/cftokens_osx_arm
+curl -s -o server/src/main/cfml/cfformat/bin/cftokens_osx_x86_64 https://github.com/jcberquist/cftokens/releases/download/v0.16.12/cftokens_osx_x86_64
+chmod +x server/src/main/cfml/cfformat/bin/*
