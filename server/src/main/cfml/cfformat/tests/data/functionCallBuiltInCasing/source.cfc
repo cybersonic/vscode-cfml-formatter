@@ -1,2 +1,0 @@
-//
-ARRAYAPPEND(myarray, 1);

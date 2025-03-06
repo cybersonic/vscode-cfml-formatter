@@ -1,5 +1,0 @@
-arrayAppend(myarray, 1);
-~
-ArrayAppend(myarray, 1);
-~
-ARRAYAPPEND(myarray, 1);

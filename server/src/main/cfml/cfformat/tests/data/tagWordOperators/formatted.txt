@@ -1,2 +1,0 @@
-<cfif a
-AND b></cfif>
