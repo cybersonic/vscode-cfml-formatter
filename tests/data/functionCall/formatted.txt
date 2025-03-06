@@ -1,0 +1,37 @@
+test( a, b, c, d );
+test.method( a, b, c, d );
+arrayAppend( arr, param );
+test.append( param );
+$$test( a );
+~
+test(
+    a,
+    b,
+    c,
+    d
+);
+test.method(
+    a,
+    b,
+    c,
+    d
+);
+arrayAppend(arr, param);
+test.append(param);
+$$test(a);
+~
+test(
+     a
+    ,b
+    ,c
+    ,d
+);
+test.method(
+     a
+    ,b
+    ,c
+    ,d
+);
+arrayAppend(arr, param);
+test.append(param);
+$$test(a);

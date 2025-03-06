@@ -1,0 +1,27 @@
+(
+    ab &&
+    cd
+)
+(
+    a
+    & b
+)
+(
+    a // test comment
+    &&
+    b
+)
+~
+(
+    ab &&
+        cd
+)
+(
+    a
+        & b
+)
+(
+    a // test comment
+        &&
+        b
+)

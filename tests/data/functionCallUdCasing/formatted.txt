@@ -1,0 +1,11 @@
+a = DoSomething();
+b = doSomething();
+c = DOSomething();
+~
+a = doSomething();
+b = doSomething();
+c = DOSomething();
+~
+a = DoSomething();
+b = DoSomething();
+c = DOSomething();
