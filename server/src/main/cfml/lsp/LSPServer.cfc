@@ -14,9 +14,18 @@ component accessors=true {
 
 
         var cfformatPath = expandPath('/cfformat/');
-        fileSetAccessMode(cfformatPath & 'bin/cftokens_osx', '777');
-        fileSetAccessMode(cfformatPath & 'bin/cftokens_linux', '777');
-        fileSetAccessMode(cfformatPath & 'bin/cftokens_linux_musl', '777');
+         fileSetAccessMode(cfformatPath & 'bin/cftokens_osx_x86_64', '777');
+         fileSetAccessMode(cfformatPath & 'bin/cftokens_osx_arm', '777');
+         fileSetAccessMode(cfformatPath & 'bin/cftokens_osx', '777');
+         fileSetAccessMode(cfformatPath & 'bin/cftokens_linux_musl', '777');
+         fileSetAccessMode(cfformatPath & 'bin/cftokens_linux', '777');
+         fileSetAccessMode(cfformatPath & 'bin/cftokens.exe', '777');
+         fileSetAccessMode(cfformatPath & 'bin/cftokens', '777');
+
+        
+        // fileSetAccessMode(cfformatPath & 'bin/cftokens_osx', '777');
+        // fileSetAccessMode(cfformatPath & 'bin/cftokens_linux', '777');
+        // fileSetAccessMode(cfformatPath & 'bin/cftokens_linux_musl', '777');
         var cfformat = new cfformat.models.CFFormat(cfformatPath & 'bin/', cfformatPath);
         beanfactory.declare('CFFormat').asValue(cfformat);
         setBeanFactory(beanFactory);
