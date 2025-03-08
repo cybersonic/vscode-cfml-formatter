@@ -40,14 +40,14 @@ jobs:
         with:
           maven-version: '3.9.6'
 
-      - name: Build and Publish Extension
-        run: npm install && npm run vscode:publish
-        env:
-            VSCE_PAT: ${{ secrets.VSCE_PAT }}
-            VSCODE_PUBLISHER: markdrew
+      # - name: Build and Publish Extension
+      #   run: npm install && npm run vscode:publish
+      #   env:
+      #       VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      #       VSCODE_PUBLISHER: markdrew
 
       - name: Package VSIX File
-        run: npm run vscode:package
+        run: npm install && npm run vscode:package
 
       - name: Get Package Version
         id: package_version
