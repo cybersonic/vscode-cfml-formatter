@@ -15,8 +15,22 @@ component accessors="true" {
         variables.tagData = deserializeJSON(fileRead(rootFolder & 'data/tags.json'));
         variables.platform = getPlatform();
         variables.lf = platform == 'windows' ? chr(13) & chr(10) : chr(10);
+        var arch = getArch();
+
+       
 
         variables.executable = binFolder & 'cftokens' & (platform == 'windows' ? '.exe' : '');
+        if(platform == "osx"){
+            // variables.executable = binFolder & 'cftokens_osx';
+            if(arch == "aarch64"){
+                variables.executable = binFolder & 'cftokens_osx_arm';
+            } else {
+                variables.executable = binFolder & 'cftokens_osx_X86_64';
+            }
+        } else if(platform == "linux"){
+            variables.executable = binFolder & 'cftokens_linux';
+         
+        }
 
         this.cfscript = new CFScript(this);
         this.cftags = new CFTags(this);
@@ -393,10 +407,17 @@ component accessors="true" {
     }
 
     function getPlatform() {
-        var osName = createObject('java', 'java.lang.System').getProperty('os.name').lcase();
+        var sys = createObject('java', 'java.lang.System')
+        var osName = sys.getProperty('os.name').lcase();
         if (osName.contains('win')) return 'windows';
         if (osName.contains('linux')) return 'linux';
         if (osName.contains('mac')) return 'osx';
+    }
+
+    function getArch(){
+        var sys = createObject('java', 'java.lang.System')
+        var arch = sys.getProperty('os.arch').lcase();;
+        return arch;
     }
 
 }

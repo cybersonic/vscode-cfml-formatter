@@ -1,7 +1,9 @@
 <cfsilent>
 <cfscript>
-cftokensVersion = deserializeJSON(fileRead(expandPath('/box.json'))).cftokens;
-binFolder = expandPath('/bin/#cftokensVersion#/');
+// cftokensVersion = deserializeJSON(fileRead(expandPath('/box.json'))).cftokens;
+binFolder = expandPath('/bin/');
+dump(binFolder);
+abort
 executable = new models.CFFormat(binFolder, expandPath('/')).getExecutable();
 
 // generate token json files

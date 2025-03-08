@@ -4,7 +4,7 @@ component accessors=true {
     property name="ConfigStore";
     property name="TextDocumentStore";
     property name="Console";
-    property name="CFRules";
+    
 
 
     function init() {
@@ -59,46 +59,7 @@ component accessors=true {
         // lspEndpoint.sendMessageToClient(message);
     }
 
-    function diagnostic(required struct message) {
-        var partialResultToken = message.params.partialResultToken ?: '';
 
-        // Do we have a documentRoot + .cfrules.json file?
-        var wsRoot = getConfigStore().getConfig().rootPath;
-        var cfrulesPath = wsRoot & '/.cfrules.json';
-
-        if(!fileExists(cfrulesPath)){
-            return;
-        }
-
-   
-        // Find it in the workspace
-        var cfrules = new cfrules.CFRules(
-            deserializeJSON(fileRead(cfrulesPath)),
-            wsRoot
-        );
-        var arrDiagnostics = cfrules.getWorkspaceIssues();
-        var items = {};
-        var resItems = [];
-        
-        for (diagnostic in arrDiagnostics) {
-            if (!items.keyExists(diagnostic.uri)) {
-                items[diagnostic.uri] = {
-                    'uri': diagnostic.uri,
-                    'kind': 'full',
-                    // 'resultId': partialResultToken,
-                    'items': []
-                };
-            }
-
-            
-            items[diagnostic.uri].items.append(diagnostic);
-        }
-        for (item in items) {
-            resItems.append(items[item]);
-        }
-        var ret = {'result': {'items': resItems}}
-        return ret;
-    }
 
     function onMissingMethod(required string methodName, required array args) {
         console.log('Missing Workspace Method', methodName, args);
