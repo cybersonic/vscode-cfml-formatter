@@ -27,7 +27,9 @@ component extends="testbox.system.BaseSpec" {
             );
 
             prepareMock(textDocument);
-            textDocument.$('findConfigFile', '{}');
+            textDocument.$('findConfigFile', '');
+            textDocument.$('showClientMessage');
+            textDocument.$('showClientLog');
 
             makePublic(textDocument, 'findConfigFile');
 
@@ -99,26 +101,59 @@ component extends="testbox.system.BaseSpec" {
             expect(parsed.size()).toBeGT(0);
         });
 
-        xdescribe('Diagnostics', function() {
-            it('should return the diagnostics', function() {
-                // Mock
-                // var console = new lsp.Console(listToArray( "Did Close"));
-                // var textDocument =  new lsp.methods.textDocument({}, console);
-
-
-                // var ret = textDocument.diagnostic({
-                //   "jsonrpc": "2.0",
-                //   "id": 1,
-                //   "method": "textDocument/diagnostic",
-                //   "params": {
-                //     "textDocument": {
-                //       "uri": "file:///path/to/file.cfc"
-                //     }
-                //   }
-                // });
-
-                // debug(ret);
+        
+        describe( "should find the config", function(){
+            var textDocument = new lsp.methods.textDocument();
+            makePublic(textDocument, 'findConfigFile');
+            
+            it( "should find an existing config in the path", function(){
+            
+                var formatFile = expandPath("/tests/resources/path/path1/path2/path3/formatme.cfm");
+                var searchRoot = expandPath("/tests/resources/path/");
+    
+                var configFile = textDocument.findConfigFile(formatFile, searchRoot);
+                expect(	configFile ).toBe(  expandPath("/tests/resources/path/.cfformat.json"));
+                
+                
+                expect(	configFile.startsWith("file://") ).toBeFalse();
             });
+
+            
+            it( "should look for the default config if we didnt find it in the path", function(){
+
+                // pretend we have some settings
+                var configStore = new lsp.ConfigStore();
+                var console = new lsp.Console();
+                var settings = {
+                    "cfml-formatter": {
+                        "defaultConfig": expandPath("/tests/resources/path/.cfformat.json")
+                    }
+                }
+                configStore.setSettings(settings);
+                
+                textDocument.setConfigStore(configStore);
+                textDocument.setConsole(console);
+            
+                var formatFile = expandPath("/tests/resources/path/path1/path2/path3/formatme.cfm");
+                var searchRoot = expandPath("/tests/resources/path/path1/");
+    
+                var configFile = textDocument.findConfigFile(formatFile, searchRoot);
+                debug(configFile);                
+
+                expect(	configFile.startsWith("file://") ).toBeFalse();
+                // Should be the default config
+                expect(	configFile ).toBe(settings["cfml-formatter"]["defaultConfig"] );
+                
+                
+            });
+            
+
+
+            // This should return the file path
+            // findConfigFile
+            //
+
+        
         });
     }
 

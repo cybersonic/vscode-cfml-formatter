@@ -18,15 +18,8 @@ component accessors=true {
     }
 
     function didChangeConfiguration(message) {
-        // console.log("Did Change Configuration", message);
-        //  "params":{"settings":{"cfml-formatter":{"javaPath":"/usr/bin/java"}}}}
-        // TODO: Update the configuration if we change it
-        // var config = variables.lspserver.getConfig();
-        // for(var change in message.params.settings){
-
-        // }
-        // store.addMessage("null", "workspace/configuration", "request", message);
-        // lspEndpoint.sendMessageToClient(message);
+        console.log('Did Change Configuration', message);
+        getConfigStore().setSettings(message.params.settings);
     }
 
     function didChangeWatchedFiles(message) {

@@ -5,12 +5,13 @@ component accessors=true {
     property name="beanFactory";
     property name="lspEndpoint";
     property name="Console";
-    
+    property name="pendingMessages" type="structure";
 
-    function initialize() {
+    function initialize(lspEndpoint) {
         var beanFactory = new framework.ioc('/lsp');
         beanFactory.declare('LSPServer').asValue(this);
         beanFactory.declare('$').instanceOf('lsp.methods.Util');
+        
 
 
         var cfformatPath = expandPath('/cfformat/');
@@ -32,9 +33,30 @@ component accessors=true {
         variables.console = variables.beanFactory.getBean('Console');
         setConsole(variables.console);
 
+
+        // Ask for the configuration from the client
+        // param name="variables.pendingMesssages" type="struct" default={};
+
+        // var config = {
+        //     'jsonrpc': '2.0',
+        //     'id': createUUID(),
+        //     'method': 'workspace/configuration',
+        //     'params': {
+        //         "items": [
+        //             {
+        //                 "section": "cfml-formatter"
+        //             }
+        //         ]
+        //     }
+        // };
+        // variables.pendingMessages[config.id] = config;
+        // lspEndpoint.sendMessageToClient(config);
+        // Store a log of pending messages to be fulfilled. 
         console.log('- Initializing LSP Server');
 
         variables.initilized = true;
+
+
 
         console.log('- Finished Initializing LSP Server');
         return this;
@@ -46,15 +68,15 @@ component accessors=true {
 
     public any function execute(required struct jsonMessage, any lspEndpoint) {
         // setup our objects if they are not setup
+       
         if (!variables.initilized OR isNull(getBeanFactory())) {
-            initialize();
+            initialize(lspEndpoint);
 
             if (isNull(getBeanFactory())) {
                 console.log('Bean Factory is null');
                 throw('Bean Factory is null');
             }
         }
-
         //if there is no response. and we have a result key, it's a response. Check in the sent messages by id 
         
 
@@ -62,7 +84,6 @@ component accessors=true {
         // Set the endpoint
         var ioc = getBeanFactory();
         ioc.declare('LSPEndpoint').asValue(lspEndpoint);
-
 
         var nullResult = {'jsonrpc': '2.0', 'result': nullValue()}
 
@@ -84,6 +105,8 @@ component accessors=true {
         if (!message.keyExists('method')) {
             // We dont know what to do so we shouldnt do anything
             // return "{}";
+            console.log('No method', jsonMessage);
+
             messageStore.addMessage(
                 id: jsonMessage.id ?: nullValue(),
                 method: 'err:no_method',

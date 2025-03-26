@@ -46,6 +46,8 @@ component accessors=true {
         var fileName = '#fileHash#.#fileExtension#';
         fileWrite(fileName, text);
 
+        // Also need to check if we are formating during save.
+
         if (fileExtension == 'cfc' OR fileExtension == 'cfm' OR fileExtension == 'cfml') {
             var tokens = cfformat.cftokensFile('tokenize', fileName);
             var parsed = cfformat.cftokensFile('parse', fileName);

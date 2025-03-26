@@ -4,12 +4,13 @@ import * as net from "node:net";
 import * as vscode from 'vscode';
 import { startServer } from "./languageServer";
 import { detect } from 'detect-port';
+import { isExecutableFile } from "./utils/fileUtils";
 
 
 // 
 import * as child_process from "child_process";
-// import { isOSWindows } from "./utils/osUtils";
-import { LOG } from "./utils/logger";
+import { isOSWindows } from "./utils/osUtils";
+import { LOG, Logger } from "./utils/logger";
 import {
   LanguageClient,
   LanguageClientOptions,
@@ -22,12 +23,12 @@ import {
 import { Status, StatusBarEntry } from './utils/status';
 
 
-
+const label = "CFML Formatter";
 let lspPort: number = 2089;
 let serverPort: number = 4000;
 const startLucee: boolean = true; //Set to false if you want to use your own server
-const socket_timeout = 5000; //Not used, this would be a timeout for the startServer function
-const outputChannel = window.createOutputChannel("CFML Formatter");
+// const socket_timeout = 5000; //Not used, this would be a timeout for the startServer function
+const outputChannel = window.createOutputChannel(label);
 let lspjar: String;
 const lspfilename = "lucee_lsp-1.0-all.jar";
 const defaultJavaPath = "/usr/bin/java";
@@ -40,25 +41,47 @@ function getRandomNumber(min: number, max: number): number {
 }
 
 
+function getSettings() {
+  const config = vscode.workspace.getConfiguration("cfml-formatter");
+  const javaPath: string = config.get("javaPath");
+  const startLucee: boolean = config.get("startLuceeServer");
+  const lspPort: number = config.get("lspPort");
+  const serverPort: number = config.get("serverPort");
+
+
+  return {
+    javaPath,
+    startLucee,
+    lspPort,
+    serverPort
+  }
+}
+
 export async function activate(context: ExtensionContext) {
 
-  // Get the property for the java path
-  const config = vscode.workspace.getConfiguration("cfml-formatter");
-  const ting = config.inspect("javaPath");
-  let javaPath = config.get("javaPath");
-  if (javaPath) {
-    LOG.info("Java Path from config: [{}]", javaPath);
+  const settings = getSettings();
+  // Need to find the location of java, JAVA_HOME
+  let javaPath: string = settings.javaPath || defaultJavaPath || process.env.JAVA_HOME;
+
+  if (!isExecutableFile(javaPath)) {
+    const message = `[${label}] ${javaPath} but it is not executable`;
+    LOG.error(message)
+    vscode.window.showErrorMessage(message);
+    return;
   }
-  else {
-    javaPath = defaultJavaPath
-    LOG.info("Java Path from default", defaultJavaPath);
-  }
+  // vscode.window.showInformationMessage(`[${label}] Using Java at ${javaPath}`);
+  // Get it from the settings, check that is true, if not try JAVA_HOME 
 
 
+  // Check that the binary for java is available
+  // const javaPath: string = settings.javaPath || defaultJavaPath;
+
+  // Check that the binary for java is available
   lspjar = path.join(context.extensionPath, 'resources', lspfilename);
 
-  // const javaVersion = await checkJavaVersion(javaPath);
-  // LOG.info("Java Version", javaVersion);
+  const startLucee = settings.startLucee;
+  let lspPort = settings.lspPort || getRandomNumber(2000, 3000);
+  let serverPort = settings.serverPort || getRandomNumber(4000, 5000);
 
   if (startLucee) {
     lspPort = getRandomNumber(2000, 3000);
@@ -74,14 +97,14 @@ export async function activate(context: ExtensionContext) {
   if (startLucee) {
 
     LOG.info("Starting Lucee LSP Server");
-    window.withProgress({
-      location: vscode.ProgressLocation.Notification,
-      title: "Starting Lucee LSP Server",
-      cancellable: false
-    }, async (progress, token) => {
+    // window.withProgress({
+    //   location: vscode.ProgressLocation.Notification,
+    //   title: "Starting Lucee LSP Server",
+    //   cancellable: false
+    // }, async (progress, token) => {
 
-    }
-    );
+    // }
+    // );
 
     // startServer(javaPath, [`-Dlucee.lsp.port=${lspPort}`, `-Dlucee.server.port=${serverPort}`, `-Dlucee.server.wardir=/tmp`, "-jar", lspjar], outputChannel);
 
@@ -94,8 +117,6 @@ export async function activate(context: ExtensionContext) {
   }
 
   LOG.info("Connecting to Lucee LSP Server on port: {}", lspPort);
-  const socketTimeout = 5000;
-
   const serverOptions: ServerOptions = async () => {
     return new Promise<StreamInfo>((resolve, reject) => {
       const socket = net.connect({ port: lspPort });
@@ -108,14 +129,6 @@ export async function activate(context: ExtensionContext) {
           writer: socket,
         });
       });
-
-      // NOTICE: Do not add a setTimeout to the socket! It will cause the connection to be closed after the timeout.
-      // // Optional timeout handling
-      // socket.setTimeout(socketTimeout, () => {
-      //   console.error("Connection timeout");
-      //   socket.destroy();
-      //   reject(new Error("Connection timeout"));
-      // });
 
       // Error handling
       socket.on("error", (err) => {
@@ -135,42 +148,6 @@ export async function activate(context: ExtensionContext) {
     });
   };
 
-
-
-  // const serverOptions = async () => {
-
-  //   // const javaArgs = [`-Dlucee.lsp.port=${lspPort}`, `-Dlucee.server.port=${serverPort}`, `-Dlucee.server.wardir=/tmp`, "-jar", lspjar];
-  //   // const javaArgsStr = javaArgs.join(" ");
-  //   // // LOG.info(`Starting on LSP via: ${javaPath} ${javaArgsStr}`);
-  //   // outputChannel.appendLine(`Starting on LSP From: ${lspjar} with args: ${javaArgs}`);
-
-  //   // luceeServer = await startServer(javaPath, javaArgs);
-  //   // await new Promise(r => setTimeout(r, 5000));
-  //   // // LOG.info(luceeServer);
-  //   // outputChannel.appendLine(`Lucee LSP Server Started after 5 seconds`);
-  //   // // console.log(luceeServer);
-  //   // return startSocket();
-  //   return new Promise((resolve, reject) => { resolve({}) });
-  // };
-
-
-  // const options = {
-  //   outputChannel,
-  //   javaPath,
-  //   lspPort,
-  //   httpPort: serverPort,
-  //   lspjar,
-  //   wardir: context.globalStorageUri.fsPath
-  // };
-
-  // console.log("Starting with options", options);
-
-  // initTasks.push(withSpinningStatus(context, async status => {
-  // serverOptions = () => spawnLanguageServerProcessAndConnectViaTcp(options);
-  // }));
-  // initTasks.push(serverOptions());
-
-  // console.log("Server Options", serverOptions);
 
   // Options to control the language client
   const clientOptions: LanguageClientOptions = {
@@ -215,24 +192,52 @@ export async function activate(context: ExtensionContext) {
 
 
 function checkJavaVersion(javaPath: string): Promise<string> {
+  const regex = /"([^"]+)"/;
   return new Promise((resolve, reject) => {
-    const javaVersion = child_process.spawn(javaPath, ["-version"]);
-    let output = "";
-    javaVersion.stdout.on("data", (data) => {
-      output += data.toString();
-      LOG.info("Java Version", output);
+    const { spawn } = require('child_process');
+    const child = spawn(javaPath, ['-version']);
+
+    let versionOutput = '';
+
+    child.stderr.on('data', (data) => {
+      versionOutput += data.toString();
     });
-    javaVersion.stderr.on("data", (data) => {
-      output += data.toString();
+
+    // Optional: capture stdout if needed (usually empty for -version)
+    child.stdout.on('data', (data) => {
+      versionOutput += data.toString();
     });
-    javaVersion.on("close", (code) => {
-      if (code === 0) {
-        resolve(output);
-      } else {
-        reject(output);
-      }
+
+    child.on('close', (code) => {
+      const firstLine = versionOutput.split("\n")[0];
+      const match = regex.exec(firstLine);
+      console.log(match[1]);
+      resolve(match[1]);
     });
+
   });
+
+
+
+
+  // return new Promise((resolve, reject) => {
+  //   const javaVersion = child_process.spawn(javaPath, ["-version"]);
+  //   let output = "";
+  //   javaVersion.stdout.on("data", (data) => {
+  //     output += data.toString();
+  //     LOG.info("Java Version", output);
+  //   });
+  //   javaVersion.stderr.on("data", (data) => {
+  //     output += data.toString();
+  //   });
+  //   javaVersion.on("close", (code) => {
+  //     if (code === 0) {
+  //       resolve(output);
+  //     } else {
+  //       reject(output);
+  //     }
+  //   });
+  // });
 }
 
 

@@ -37,29 +37,50 @@
       "properties": {
         "cfml-formatter.javaPath": {
           "type": "string",
-          "default": "/usr/bin/java"
+          "default": "/usr/bin/java",
+          "description": "The path to the java executable to run the Language Server"
+        },
+        "cfml-formatter.defaultConfig": {
+          "type": "string",
+          "default": "",
+          "description": "The path to a default config file to if one is not defined in the workspace"
+        },
+        "cfml-formatter.startLuceeServer": {
+          "type": "boolean",
+          "default": true,
+          "description": "Set to false if you are running a LSP server already, only used for debugging the extension itself."
+        },
+        "cfml-formatter.lspPort": {
+          "type": "number",
+          "default": 2089,
+          "description": "The port to run the LSP server on. This is what the extension will connect to. Each editor will have its own LSP server."
+        },
+        "cfml-formatter.serverPort": {
+          "type": "number",
+          "default": 4000,
+          "description": "The port to run the Lucee server on. Used to debug the extension itself. Each editor will have its own Lucee server."
         }
-      }
+      },
+      "commands": [
+        {
+          "command": "cfml-formatter.openServerURL",
+          "title": "CFML Formatter: Open Server URL (for debugging)"
+        }
+      ]
     },
-    "commands": [
-      {
-        "command": "cfml-formatter.openServerURL",
-        "title": "CFML Formatter: Open Server URL"
-      }
-    ]
-  },
-  "scripts": {
-    "vscode:prepublish": "npm version patch --no-git-tag-version && npm run compile && cd server && ant",
-    "compile": "tsc -b",
-    "watch": "tsc -b -w",
-    "postinstall": "cd client && npm install && cd ..",
-    "vscode:package": "vsce package",
-    "vscode:publish": "vsce publish --pre-release"
-  },
-  "devDependencies": {
-    "typescript": "^5.7.3"
-  },
-  "dependencies": {
-    "get-port": "^7.1.0"
+    "scripts": {
+      "vscode:prepublish": "npm version patch --no-git-tag-version && npm run compile && cd server && ant",
+      "compile": "tsc -b",
+      "watch": "tsc -b -w",
+      "postinstall": "cd client && npm install && cd ..",
+      "vscode:package": "vsce package",
+      "vscode:publish": "vsce publish --pre-release"
+    },
+    "devDependencies": {
+      "typescript": "^5.7.3"
+    },
+    "dependencies": {
+      "get-port": "^7.1.0"
+    }
   }
 }

@@ -24,19 +24,7 @@
         // dump(instance);
         
         // dump(instance.getComponent().getObjects().lifecycle.getConfig());
-        message = {
-            "jsonrpc": "2.0",
-            "method": "workspace/configuration",
-            "id": "666",
-            "params": {
-                "items": [
-                    {
-                        "section": "cfml-formatter"
-                    }
-                ]
-            }
-        }
-        dump(instance.sendMessageToClient(message) );
+      
         
         // dump(instance.processMessage('{"jsonrpc":"2.0","method":"initialized","params":{}}'));
 
@@ -123,7 +111,7 @@
 
                 <!--- <cfdump var="#filtered.Len()#" label="Filtered">
                 <cfdump var="#unfiltered.Len()#" label="All"> --->
-                <cfset msgCount = FORM.msgCount>
+            <cfset msgCount = FORM.msgCount>
                 <cfset from=filtered.len()>
                 <cfset to=from LT msgCount ?  1 : filtered.len() - msgCount>
                 <cfset to= to LT 1 ? 1 : to>
@@ -225,9 +213,9 @@
                         <li><i class="bi bi-file-code"></i><strong>#relativePath(key)#</strong> 
                             
                             <button class="btn btn-primary btn-sm" data-detail="#docHash#"><i class="bi bi-arrow-down-circle-fill"></i></button>: 
-                            <div class='small' id='detail-#docHash#' style="display:none;">
-                                <code><pre>#documents[key].getText()#</pre></code>
-                            </div>
+                            <!--- <div class='small' id='detail-#docHash#' style="display:none;">
+                                <!--- <code><pre>#documents[key].getText()#</pre></code> --->
+                            </div> --->
                         </li>
                     </cfloop>
                 </ul>
@@ -267,6 +255,8 @@
         <div class="col-md-6">
             <h2>Client Config</h2>
             <cfdump var="#configStore.getConfig()#" expand="false">
+            <h2>Client Settings</h2>
+            <cfdump var="#configStore.getSettings()#" expand="false">
         </div>
     </div>
     <script>

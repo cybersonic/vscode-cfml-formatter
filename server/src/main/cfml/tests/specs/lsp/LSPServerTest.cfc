@@ -26,6 +26,12 @@ component extends="testbox.system.BaseSpec"{
         // all your suites go here.
         describe( "LSP Server", function(){
             var sut = new lsp.LSPServer();
+            // Mock the endpoint so that we can send messages to it.
+            var mockEndpoint = createMock( "tests.components.FakeLSPFactory" );
+            mockEndpoint.$("sendMessageToClient");
+
+            debug(mockEndpoint);
+            sut.setLspEndpoint( mockEndpoint );
 
             it( "should initialize everything", function(){
                 sut.initialize();

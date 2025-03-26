@@ -60,52 +60,60 @@ component accessors="true" {
      * This returns the config file contents, or {} if none found
      * @from the file from where to search , in the format file:///Users/etc.
      * @to usually the root of the worspace.
+     * @return the path to a file
      */
     private string function findConfigFile(from, to) {
         // Make them into URIs.
-        var fromFile = new URL(from);
+        var fromFile = new URL("file://" & from);
         var fromPath = getDirectoryFromPath(fromFile.getPath());
-        var toDir = new URL(to);
+        var toDir = new URL("file://" & to);
         var toPath = toDir.getPath();
 
-
+        // var prefix = "file://";
 
 
         param name="server.documents" default="#{}#";
 
         // If we have an item next to it. But we should look in the docs first.
-        var nearestCFFormat = 'file://' & fromPath & '.cfformat.json';
+        var nearestCFFormat = fromPath & '.cfformat.json';
 
-        if (server.documents.keyExists(nearestCFFormat)) {
-            return server.documents[nearestCFFormat];
-        }
+        
         // Otherwise check the actual filesystem
         if (fileExists(fromPath & '.cfformat.json')) {
             // dump("Found in Filesystem #fromPath#.cfformat.json");
-            return fileRead(fromPath & '.cfformat.json');
+            return fromPath & '.cfformat.json';
         }
 
         var fromPathArr = listToArray(fromPAth, '/');
         var toPathArr = listToArray(toPath, '/');
 
-
+        
         loop from="#fromPathArr.len()#" to="#toPathArr.len()#" step="-1" index="dirIndex" {
             var formatFilePath = arraySlice(fromPathArr, 1, dirIndex).toList('/');
             formatFilePath = '/' & formatFilePath & '/.cfformat.json';
 
-            var nearestCFFormat = 'file://' & formatFilePath;
+            var nearestCFFormat = formatFilePath;
 
-            if (server.documents.keyExists(nearestCFFormat)) {
-                // dump("Found in Server #nearestCFFormat#");
-                return server.documents[nearestCFFormat];
-            }
+            // if (server.documents.keyExists(nearestCFFormat)) {
+            //     // dump("Found in Server #nearestCFFormat#");
+            //     return server.documents[nearestCFFormat];
+            // }
             // Otherwise check the actual filesystem
             if (fileExists(formatFilePath)) {
-                return fileRead(formatFilePath);
+                return  formatFilePath;
             }
         }
 
-        return '{}';
+        // If we didnt find it with all of the above, try to read the one from the config
+
+        var settings = getConfigStore().getSettings();
+        var configDefaultFile = settings['cfml-formatter']['defaultConfig'] ?: '';
+
+        if (fileExists(configDefaultFile) && isJSON(fileRead(configDefaultFile))) {
+            console.log("Found in Config Default File", configDefaultFile);
+            return configDefaultFile;
+        }
+        return '';
     }
 
 
@@ -142,34 +150,9 @@ component accessors="true" {
     }
 
 
-
-    // public function diagnostic(required struct message){
-
-    //     return {
-    //         "jsonrpc": "2.0",
-    //         "id": message.id,
-    //         "result": {
-    //           "kind": "full",
-    //           "items": [
-    //             {
-    //                 "range": {
-    //                     "start": { "line": 3, "character": 5 },
-    //                     "end": { "line": 3, "character": 49 }
-    //                 },
-    //                 "severity": 2,
-    //                 "code": "CFML1001",
-    //                 "source": "cfml",
-    //                 "message": "Unexpected token in CFML expression."
-    //             }
-    //           ]
-    //         }
-    //       }
-    // }
-
-
     public struct function formatting(required struct message) {
         var theDoc = getTextDocumentStore().getDocument(arguments.message.params.textDocument.uri);
-
+        var defaultSettingsPath = getConfigStore().getSettings();
         // Need to return an error , rather than a blank result.
         if (isNull(theDoc)) {
             return {'jsonrpc': '2.0', 'id': message.id, 'result': []}
@@ -179,32 +162,89 @@ component accessors="true" {
         var filename = '/tmp/#hash(message.params.textDocument.uri)#.#extension#';
 
         fileWrite(filename, theDoc);
-        // TODO: figure out how we get these, either from file or as a .cfformat file
         var settings = {};
         var rootURI = getConfigStore().getConfig().rootURI;
+        
+        // All the findConfigFile stuff should be in one function, we should do finding and returning of the config. 
         var loadSettings = findConfigFile(message.params.textDocument.uri, rootURI);
-        if (isJSON(loadSettings)) {
-            settings = deserializeJSON(loadSettings);
+
+        
+        if (Len(loadSettings)) {
+            showClientLog('info', 'Loading settings from ' & loadSettings);
+            var rawSettings = FileRead(loadSettings);
+            settings = deserializeJSON(rawSettings);
         }
-        // console.log("Config Settings", settings);
+        else {
+            showClientMessage('warning', 'No formatting settings found. Using Default');
+            showClientLog('warning', 'No formatting settings found. Using Default');
+        }
 
-        var originalLines = getLines(theDoc);
 
-        var formattedDoc = getCFFormat().formatFile(filename, settings);
-
-        return {
-            'jsonrpc': '2.0',
-            'id': message.id,
-            'result': [
-                {
-                    'range': {
-                        'start': {'line': 0, 'character': 0},
-                        'end': {'line': originalLines.len(), 'character': originalLines.last().len()}
-                    },
-                    'newText': formattedDoc
+        try {
+             // console.log("Config Settings", settings);
+            var originalLines = getLines(theDoc);
+            var formattedDoc = getCFFormat().formatFile(filename, settings);
+            // Send a message to the client to let them know what we are formatting with 
+            // getLSP('info', 'Formatting with settings');
+            return {
+                'jsonrpc': '2.0',
+                'id': message.id,
+                'result': [
+                    {
+                        'range': {
+                            'start': {'line': 0, 'character': 0},
+                            'end': {'line': originalLines.len(), 'character': originalLines.last().len()}
+                        },
+                        'newText': formattedDoc
+                    }
+                ]
+            }
+        } catch (ext) {
+            // Need to decorate with the file. 
+            var message  = '#ext.message# in #message.params.textDocument.uri#';
+            showClientMessage('error', message);
+            showClientLog('error', message);
+            
+            return {
+                'jsonrpc': '2.0',
+                'id': message.id,
+                'error': {
+                    'code':  -32700,
+                    'message':message,
+                    'data': ext
                 }
-            ]
+            }
+
+
+            // throw(ext);
         }
+       
+    }
+
+    private void function showClientLog(string type = "info", string message) {
+        sendClientMessage(type, message, "window/logMessage");
+    }
+    private void function showClientMessage(string type = "info", string message) {
+
+        sendClientMessage(type, message, "window/showMessage");
+    }
+
+    private function sendClientMessage(string type,string message, method="window/showMessage") {
+        var types = {
+            'info': 3,
+            'warning': 2,
+            'error': 1
+        };
+        var message = {
+            'jsonrpc': '2.0',
+            'method': arguments.method,
+            'params': {
+                'type': types[arguments.type],
+                'message': arguments.message
+            }
+        };
+        var instance=createObject("java","lucee.runtime.lsp.LSPEndpointFactory").getExistingInstance();
+        instance.sendMessageToClient(message, false);
     }
 
     private function getLines(required string text) {
