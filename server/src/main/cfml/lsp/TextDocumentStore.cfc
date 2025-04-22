@@ -11,7 +11,7 @@ component accessors=true {
         return this;
     }
 
-    public textDocumentItem function getDocument(required string uri) {
+    public any function getDocument(required string uri) {
         if (variables.documents.keyExists(uri)) {
             return variables.documents[uri];
         }

@@ -5,7 +5,7 @@
   "author": "Mark Drew",
   "preview": true,
   "license": "MIT",
-  "version": "1.0.81",
+  "version": "1.0.87",
   "publisher": "markdrew",
   "repository": {
     "type": "git",
@@ -74,7 +74,7 @@
       "watch": "tsc -b -w",
       "postinstall": "cd client && npm install && cd ..",
       "vscode:package": "vsce package",
-      "vscode:publish": "vsce publish --pre-release"
+      "vscode:publish": "vsce publish"
     },
     "devDependencies": {
       "typescript": "^5.7.3"
@@ -82,5 +82,13 @@
     "dependencies": {
       "get-port": "^7.1.0"
     }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm version patch --no-git-tag-version && npm run compile && cd server && ant",
+    "compile": "tsc -b",
+    "watch": "tsc -b -w",
+    "postinstall": "cd client && npm install && cd ..",
+    "vscode:package": "vsce package",
+    "vscode:publish": "vsce publish --pre-release"
   }
 }

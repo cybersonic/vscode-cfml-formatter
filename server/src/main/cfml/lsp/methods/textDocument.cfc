@@ -64,9 +64,9 @@ component accessors="true" {
      */
     private string function findConfigFile(from, to) {
         // Make them into URIs.
-        var fromFile = new URL("file://" & from);
+        var fromFile = new URL('file://' & from);
         var fromPath = getDirectoryFromPath(fromFile.getPath());
-        var toDir = new URL("file://" & to);
+        var toDir = new URL('file://' & to);
         var toPath = toDir.getPath();
 
         // var prefix = "file://";
@@ -87,7 +87,7 @@ component accessors="true" {
         var fromPathArr = listToArray(fromPAth, '/');
         var toPathArr = listToArray(toPath, '/');
 
-        
+
         loop from="#fromPathArr.len()#" to="#toPathArr.len()#" step="-1" index="dirIndex" {
             var formatFilePath = arraySlice(fromPathArr, 1, dirIndex).toList('/');
             formatFilePath = '/' & formatFilePath & '/.cfformat.json';
@@ -100,7 +100,7 @@ component accessors="true" {
             // }
             // Otherwise check the actual filesystem
             if (fileExists(formatFilePath)) {
-                return  formatFilePath;
+                return formatFilePath;
             }
         }
 
@@ -110,7 +110,7 @@ component accessors="true" {
         var configDefaultFile = settings['cfml-formatter']['defaultConfig'] ?: '';
 
         if (fileExists(configDefaultFile) && isJSON(fileRead(configDefaultFile))) {
-            console.log("Found in Config Default File", configDefaultFile);
+            console.log('Found in Config Default File', configDefaultFile);
             return configDefaultFile;
         }
         return '';
@@ -152,11 +152,19 @@ component accessors="true" {
 
     public struct function formatting(required struct message) {
         var theDoc = getTextDocumentStore().getDocument(arguments.message.params.textDocument.uri);
-        var defaultSettingsPath = getConfigStore().getSettings();
-        // Need to return an error , rather than a blank result.
+
         if (isNull(theDoc)) {
-            return {'jsonrpc': '2.0', 'id': message.id, 'result': []}
+            return {
+                'jsonrpc': '2.0', 
+                'id': message.id, 
+                'result': [],
+                'error': {
+                    "code": -32603,
+                    "message": "Document not found, try re-opening the file",
+                }
+            };
         }
+        var defaultSettingsPath = getConfigStore().getSettings();
         // Have to save the file to disk and then run the formatter on it.
         var extension = listLast(message.params.textDocument.uri, '.');
         var filename = '/tmp/#hash(message.params.textDocument.uri)#.#extension#';
@@ -164,27 +172,26 @@ component accessors="true" {
         fileWrite(filename, theDoc);
         var settings = {};
         var rootURI = getConfigStore().getConfig().rootURI;
-        
-        // All the findConfigFile stuff should be in one function, we should do finding and returning of the config. 
+
+        // All the findConfigFile stuff should be in one function, we should do finding and returning of the config.
         var loadSettings = findConfigFile(message.params.textDocument.uri, rootURI);
 
-        
-        if (Len(loadSettings)) {
+
+        if (len(loadSettings)) {
             showClientLog('info', 'Loading settings from ' & loadSettings);
-            var rawSettings = FileRead(loadSettings);
+            var rawSettings = fileRead(loadSettings);
             settings = deserializeJSON(rawSettings);
-        }
-        else {
+        } else {
             showClientMessage('warning', 'No formatting settings found. Using Default');
             showClientLog('warning', 'No formatting settings found. Using Default');
         }
 
 
         try {
-             // console.log("Config Settings", settings);
+            // console.log("Config Settings", settings);
             var originalLines = getLines(theDoc);
             var formattedDoc = getCFFormat().formatFile(filename, settings);
-            // Send a message to the client to let them know what we are formatting with 
+            // Send a message to the client to let them know what we are formatting with
             // getLSP('info', 'Formatting with settings');
             return {
                 'jsonrpc': '2.0',
@@ -200,50 +207,33 @@ component accessors="true" {
                 ]
             }
         } catch (ext) {
-            // Need to decorate with the file. 
-            var message  = '#ext.message# in #message.params.textDocument.uri#';
+            // Need to decorate with the file.
+            var message = '#ext.message# in #message.params.textDocument.uri#';
             showClientMessage('error', message);
             showClientLog('error', message);
-            
-            return {
-                'jsonrpc': '2.0',
-                'id': message.id,
-                'error': {
-                    'code':  -32700,
-                    'message':message,
-                    'data': ext
-                }
-            }
+
+            return {'jsonrpc': '2.0', 'id': message.id, 'error': {'code': -32700, 'message': message, 'data': ext}}
 
 
             // throw(ext);
         }
-       
     }
 
-    private void function showClientLog(string type = "info", string message) {
-        sendClientMessage(type, message, "window/logMessage");
+    private void function showClientLog(string type = 'info', string message) {
+        sendClientMessage(type, message, 'window/logMessage');
     }
-    private void function showClientMessage(string type = "info", string message) {
-
-        sendClientMessage(type, message, "window/showMessage");
+    private void function showClientMessage(string type = 'info', string message) {
+        sendClientMessage(type, message, 'window/showMessage');
     }
 
-    private function sendClientMessage(string type,string message, method="window/showMessage") {
-        var types = {
-            'info': 3,
-            'warning': 2,
-            'error': 1
-        };
+    private function sendClientMessage(string type, string message, method = 'window/showMessage') {
+        var types = {'info': 3, 'warning': 2, 'error': 1};
         var message = {
             'jsonrpc': '2.0',
             'method': arguments.method,
-            'params': {
-                'type': types[arguments.type],
-                'message': arguments.message
-            }
+            'params': {'type': types[arguments.type], 'message': arguments.message}
         };
-        var instance=createObject("java","lucee.runtime.lsp.LSPEndpointFactory").getExistingInstance();
+        var instance = createObject('java', 'lucee.runtime.lsp.LSPEndpointFactory').getExistingInstance();
         instance.sendMessageToClient(message, false);
     }
 

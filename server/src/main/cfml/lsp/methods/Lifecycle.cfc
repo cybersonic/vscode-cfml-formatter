@@ -40,7 +40,7 @@ component accessors="true" {
                     'documentFormattingProvider': true,
                     // "documentRangeFormattingProvider": true,
                     // 'diagnosticProvider': {'interFileDependencies': false, 'workspaceDiagnostics': true},
-                    'diagnosticProvider': {'interFileDependencies': false, 'workspaceDiagnostics': false},
+                    // 'diagnosticProvider': {'interFileDependencies': false, 'workspaceDiagnostics': false},
                     // "codeActionProvider": true,
                     'workspace': {
                         'workspaceFolders': {'supported': true, 'changeNotifications': true},

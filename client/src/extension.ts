@@ -14,10 +14,9 @@ import { LOG, Logger } from "./utils/logger";
 import {
   LanguageClient,
   LanguageClientOptions,
-  ClientCapabilities,
   ServerOptions,
-  TransportKind,
-  SocketTransport,
+  ErrorAction,
+  CloseAction,
   StreamInfo,
 } from "vscode-languageclient/node";
 import { Status, StatusBarEntry } from './utils/status';
@@ -162,7 +161,18 @@ export async function activate(context: ExtensionContext) {
         workspace.createFileSystemWatcher("**/.cfrules")
       ],
       configurationSection: "cfml-formatter"
+    },
+    errorHandler: {
+      error: (error, message, count) => {
+        console.error('Language server error:', error);
+        return ErrorAction.Continue;
+      },
+      closed: () => {
+        console.warn('Language server closed unexpectedly');
+        return CloseAction.Restart;
+      }
     }
+
   };
 
   // Create the language client and start the client.
