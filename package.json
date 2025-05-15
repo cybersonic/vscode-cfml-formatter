@@ -5,7 +5,7 @@
   "author": "Mark Drew",
   "preview": true,
   "license": "MIT",
-  "version": "1.0.87",
+  "version": "1.0.104",
   "publisher": "markdrew",
   "repository": {
     "type": "git",
@@ -25,10 +25,7 @@
   },
   "icon": "assets/logo@2x.png",
   "activationEvents": [
-    "workspaceContains:**/*.cfm",
-    "workspaceContains:**/*.cfml",
-    "workspaceContains:**/*.cfc",
-    "workspaceContains:**/*.cfs"
+    "onLanguage:cfml"
   ],
   "main": "./client/out/extension",
   "contributes": {
@@ -44,11 +41,6 @@
           "type": "string",
           "default": "",
           "description": "The path to a default config file to if one is not defined in the workspace"
-        },
-        "cfml-formatter.startLuceeServer": {
-          "type": "boolean",
-          "default": true,
-          "description": "Set to false if you are running a LSP server already, only used for debugging the extension itself."
         },
         "cfml-formatter.lspPort": {
           "type": "number",
@@ -68,20 +60,16 @@
         }
       ]
     },
-    "scripts": {
-      "vscode:prepublish": "npm version patch --no-git-tag-version && npm run compile && cd server && ant",
-      "compile": "tsc -b",
-      "watch": "tsc -b -w",
-      "postinstall": "cd client && npm install && cd ..",
-      "vscode:package": "vsce package",
-      "vscode:publish": "vsce publish"
-    },
-    "devDependencies": {
-      "typescript": "^5.7.3"
-    },
-    "dependencies": {
-      "get-port": "^7.1.0"
-    }
+    "commands": [
+      {
+        "command": "cfml-formatter.openServerURL",
+        "title": "CFML Formatter: Open Server URL (for debugging)"
+      },
+      {
+        "command": "cfml-formatter.restartServer",
+        "title": "CFML Formatter: Restart Server"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm version patch --no-git-tag-version && npm run compile && cd server && ant",
@@ -90,5 +78,11 @@
     "postinstall": "cd client && npm install && cd ..",
     "vscode:package": "vsce package",
     "vscode:publish": "vsce publish --pre-release"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "get-port": "^7.1.0"
   }
 }

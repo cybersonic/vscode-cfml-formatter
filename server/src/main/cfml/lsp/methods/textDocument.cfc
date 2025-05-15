@@ -18,18 +18,21 @@ component accessors="true" {
         return textDocumentItem;
     }
 
-    public void function didClose(required struct message) {
+    public function didClose(required struct message) {
         // console.log("Did Close", message);
         getTextDocumentStore().deleteDocument(message.params.textDocument.uri);
+        return {'jsonrpc': '2.0', 'result': {}};
     }
-    public void function didOpen(required struct message) {
+    public function didOpen(required struct message) {
+        // console.log("Did Open", message.params.textDocument.uri);
         updateDocument(message.params.textDocument);
+        return {'jsonrpc': '2.0', 'result': {}};
     }
 
 
     public void function didChange(required struct message) {
         // TODO: Check what is in the content Changes. We are doing full sync for now.
-        console.log('didChange', message.params);
+        // console.log('"Did Change', message.params.textDocument.uri);
 
         var textDocument = {
             'uri': message.params.textDocument.uri,
@@ -48,7 +51,6 @@ component accessors="true" {
 
     public struct function completion(required struct message) {
         // Returns a completion thing.
-
         return {
             'jsonrpc': '2.0',
             'id': message.id,
@@ -77,7 +79,7 @@ component accessors="true" {
         // If we have an item next to it. But we should look in the docs first.
         var nearestCFFormat = fromPath & '.cfformat.json';
 
-        
+
         // Otherwise check the actual filesystem
         if (fileExists(fromPath & '.cfformat.json')) {
             // dump("Found in Filesystem #fromPath#.cfformat.json");
@@ -155,13 +157,10 @@ component accessors="true" {
 
         if (isNull(theDoc)) {
             return {
-                'jsonrpc': '2.0', 
-                'id': message.id, 
+                'jsonrpc': '2.0',
+                'id': message.id,
                 'result': [],
-                'error': {
-                    "code": -32603,
-                    "message": "Document not found, try re-opening the file",
-                }
+                'error': {'code': -32603, 'message': 'Document not found, try re-opening the file'}
             };
         }
         var defaultSettingsPath = getConfigStore().getSettings();
@@ -175,6 +174,7 @@ component accessors="true" {
 
         // All the findConfigFile stuff should be in one function, we should do finding and returning of the config.
         var loadSettings = findConfigFile(message.params.textDocument.uri, rootURI);
+
 
 
         if (len(loadSettings)) {
@@ -193,6 +193,9 @@ component accessors="true" {
             var formattedDoc = getCFFormat().formatFile(filename, settings);
             // Send a message to the client to let them know what we are formatting with
             // getLSP('info', 'Formatting with settings');
+            var docname = listLast(arguments.message.params.textDocument.uri, '/');
+            showClientMessage('info', 'Formatted #docname#');
+            showClientLog('info', 'Formatted #docname#');
             return {
                 'jsonrpc': '2.0',
                 'id': message.id,
@@ -211,8 +214,11 @@ component accessors="true" {
             var message = '#ext.message# in #message.params.textDocument.uri#';
             showClientMessage('error', message);
             showClientLog('error', message);
+            if (message.keyExists('id')) {
+                return {'jsonrpc': '2.0', 'id': message.id, 'error': {'code': -32700, 'message': message, 'data': ext}}
+            }
+            return {'jsonrpc': '2.0', 'error': {'code': -32700, 'message': message, 'data': ext}}
 
-            return {'jsonrpc': '2.0', 'id': message.id, 'error': {'code': -32700, 'message': message, 'data': ext}}
 
 
             // throw(ext);
@@ -220,7 +226,7 @@ component accessors="true" {
     }
 
     private void function showClientLog(string type = 'info', string message) {
-        sendClientMessage(type, message, 'window/logMessage');
+        // sendClientMessage(type, message, 'window/logMessage');
     }
     private void function showClientMessage(string type = 'info', string message) {
         sendClientMessage(type, message, 'window/showMessage');
@@ -246,7 +252,7 @@ component accessors="true" {
     }
 
     public void function onMissingMethod(required string methodName, required array args) {
-        getConsole().log('Missing Method', methodName, args);
+        // getConsole().log('Missing Method', methodName, args);
     }
 
 

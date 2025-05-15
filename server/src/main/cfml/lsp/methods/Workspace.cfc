@@ -18,7 +18,7 @@ component accessors=true {
     }
 
     function didChangeConfiguration(message) {
-        console.log('Did Change Configuration', message);
+        // console.log('Did Change Configuration', message);
         getConfigStore().setSettings(message.params.settings);
     }
 

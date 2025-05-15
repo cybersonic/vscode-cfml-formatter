@@ -1,13 +1,13 @@
 import * as path from "path";
 import { workspace, ExtensionContext, window } from "vscode";
 import * as net from "node:net";
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 import { startServer } from "./languageServer";
-import { detect } from 'detect-port';
+import { detect } from "detect-port";
 import { isExecutableFile } from "./utils/fileUtils";
+import { exec } from "child_process";
 
-
-// 
+//
 import * as child_process from "child_process";
 import { isOSWindows } from "./utils/osUtils";
 import { LOG, Logger } from "./utils/logger";
@@ -19,8 +19,7 @@ import {
   CloseAction,
   StreamInfo,
 } from "vscode-languageclient/node";
-import { Status, StatusBarEntry } from './utils/status';
-
+import { Status, StatusBarEntry } from "./utils/status";
 
 const label = "CFML Formatter";
 let lspPort: number = 2089;
@@ -34,49 +33,46 @@ const defaultJavaPath = "/usr/bin/java";
 
 let luceeServer;
 
-
 function getRandomNumber(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-
 function getSettings() {
   const config = vscode.workspace.getConfiguration("cfml-formatter");
   const javaPath: string = config.get("javaPath");
-  const startLucee: boolean = config.get("startLuceeServer");
+  const startLucee: boolean = true;
   const lspPort: number = config.get("lspPort");
   const serverPort: number = config.get("serverPort");
-
 
   return {
     javaPath,
     startLucee,
     lspPort,
-    serverPort
-  }
+    serverPort,
+  };
 }
 
 export async function activate(context: ExtensionContext) {
-
   const settings = getSettings();
+
   // Need to find the location of java, JAVA_HOME
-  let javaPath: string = settings.javaPath || defaultJavaPath || process.env.JAVA_HOME;
+  let javaPath: string =
+    settings.javaPath || defaultJavaPath || process.env.JAVA_HOME;
 
   if (!isExecutableFile(javaPath)) {
     const message = `[${label}] ${javaPath} but it is not executable`;
-    LOG.error(message)
+    LOG.error(message);
     vscode.window.showErrorMessage(message);
     return;
   }
   // vscode.window.showInformationMessage(`[${label}] Using Java at ${javaPath}`);
-  // Get it from the settings, check that is true, if not try JAVA_HOME 
-
+  // Get it from the settings, check that is true, if not try JAVA_HOME
 
   // Check that the binary for java is available
   // const javaPath: string = settings.javaPath || defaultJavaPath;
 
   // Check that the binary for java is available
-  lspjar = path.join(context.extensionPath, 'resources', lspfilename);
+  lspjar = path.join(context.extensionPath, "resources", lspfilename);
 
   const startLucee = settings.startLucee;
   let lspPort = settings.lspPort || getRandomNumber(2000, 3000);
@@ -92,27 +88,13 @@ export async function activate(context: ExtensionContext) {
 
   LOG.info("LSP Extension Port {}", lspPort);
   LOG.info("LSP Extension Web Server Port {}", serverPort);
-
   if (startLucee) {
-
-    LOG.info("Starting Lucee LSP Server");
-    // window.withProgress({
-    //   location: vscode.ProgressLocation.Notification,
-    //   title: "Starting Lucee LSP Server",
-    //   cancellable: false
-    // }, async (progress, token) => {
-
-    // }
-    // );
-
-    // startServer(javaPath, [`-Dlucee.lsp.port=${lspPort}`, `-Dlucee.server.port=${serverPort}`, `-Dlucee.server.wardir=/tmp`, "-jar", lspjar], outputChannel);
-
-    luceeServer = await startServer(javaPath, [`-Dlucee.lsp.port=${lspPort}`, `-Dlucee.server.port=${serverPort}`, `-Dlucee.server.wardir=/tmp`, "-jar", lspjar], outputChannel);
-
-    LOG.info("Started Lucee LSP Server");
-  }
-  else {
-    LOG.info("Not Starting Lucee LSP Server, using existing server on port {}", lspPort);
+    await startLuceeServer();
+  } else {
+    LOG.info(
+      "Not Starting Lucee LSP Server, using existing server on port {}",
+      lspPort
+    );
   }
 
   LOG.info("Connecting to Lucee LSP Server on port: {}", lspPort);
@@ -129,7 +111,7 @@ export async function activate(context: ExtensionContext) {
         });
       });
 
-      // Error handling
+      // Error handling... this might not be correct. Tomcat likes outputting to the error log
       socket.on("error", (err) => {
         LOG.error(`Server error: ${err.message}`);
         reject(err);
@@ -147,32 +129,34 @@ export async function activate(context: ExtensionContext) {
     });
   };
 
-
   // Options to control the language client
   const clientOptions: LanguageClientOptions = {
     // Register the server for all documents by default
     documentSelector: [{ scheme: "file", language: "cfml" }],
+    connectionOptions: {
+      maxRestartCount: 5,
+    },
     synchronize: {
       // Notify the server about file changes to varioius config files contained in the workspace
       fileEvents: [
         workspace.createFileSystemWatcher("**/.cfformat.json"),
         workspace.createFileSystemWatcher("**/.cfformat"),
         workspace.createFileSystemWatcher("**/.cfrules.json"),
-        workspace.createFileSystemWatcher("**/.cfrules")
+        workspace.createFileSystemWatcher("**/.cfrules"),
       ],
-      configurationSection: "cfml-formatter"
+      configurationSection: "cfml-formatter",
     },
-    errorHandler: {
-      error: (error, message, count) => {
-        console.error('Language server error:', error);
-        return ErrorAction.Continue;
-      },
-      closed: () => {
-        console.warn('Language server closed unexpectedly');
-        return CloseAction.Restart;
-      }
-    }
-
+    // ,
+    // errorHandler: {
+    //   error: (error, message, count) => {
+    //     console.error('Language server error:', error);
+    //     return ErrorAction.Continue;
+    //   },
+    //   closed: () => {
+    //     console.warn('Language server closed unexpectedly');
+    //     return CloseAction.Restart;
+    //   }
+    // }
   };
 
   // Create the language client and start the client.
@@ -191,44 +175,65 @@ export async function activate(context: ExtensionContext) {
     () => {
       const languageServerUrl = `http://localhost:${serverPort}/`; // Replace with your Language Server URL
       vscode.env.openExternal(vscode.Uri.parse(languageServerUrl));
-      vscode.window.showInformationMessage(`Opened Language Server URL: ${languageServerUrl}`);
+      vscode.window.showInformationMessage(
+        `Opened Language Server URL: ${languageServerUrl}`
+      );
     }
   );
 
+  async function startLuceeServer() {
+    LOG.info("Starting CFML Formatter Server");
 
+    await vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: "Starting CFML Formatter Server",
+        cancellable: false,
+      },
+      async (progress) => {
+        progress.report({ message: "Initializing server " });
+
+        luceeServer = await startServer(javaPath, [
+          `-Dlucee.lsp.port=${lspPort}`,
+          `-Dlucee.server.port=${serverPort}`,
+          `-Dlucee.server.wardir=/tmp`,
+          "-jar",
+          lspjar,
+        ]);
+
+        progress.report({ message: "Server started successfully!" });
+      }
+    );
+
+    LOG.info("Started Lucee LSP Server");
+  }
   // Start the client. This will also launch the server
-
 }
-
 
 function checkJavaVersion(javaPath: string): Promise<string> {
   const regex = /"([^"]+)"/;
   return new Promise((resolve, reject) => {
-    const { spawn } = require('child_process');
-    const child = spawn(javaPath, ['-version']);
+    const { spawn } = require("child_process");
+    const child = spawn(javaPath, ["-version"]);
 
-    let versionOutput = '';
+    let versionOutput = "";
 
-    child.stderr.on('data', (data) => {
+    child.stderr.on("data", (data) => {
       versionOutput += data.toString();
     });
 
     // Optional: capture stdout if needed (usually empty for -version)
-    child.stdout.on('data', (data) => {
+    child.stdout.on("data", (data) => {
       versionOutput += data.toString();
     });
 
-    child.on('close', (code) => {
+    child.on("close", (code) => {
       const firstLine = versionOutput.split("\n")[0];
       const match = regex.exec(firstLine);
       console.log(match[1]);
       resolve(match[1]);
     });
-
   });
-
-
-
 
   // return new Promise((resolve, reject) => {
   //   const javaVersion = child_process.spawn(javaPath, ["-version"]);
@@ -250,16 +255,15 @@ function checkJavaVersion(javaPath: string): Promise<string> {
   // });
 }
 
-
-
-async function withSpinningStatus(context: vscode.ExtensionContext, action: (status: Status) => Promise<void>): Promise<void> {
+async function withSpinningStatus(
+  context: vscode.ExtensionContext,
+  action: (status: Status) => Promise<void>
+): Promise<void> {
   const status = new StatusBarEntry(context, "$(sync~spin)");
   status.show();
   await action(status);
   status.dispose();
 }
-
-
 
 export function deactivate(): void {
   LOG.info("Deactivating CFML Formatter");

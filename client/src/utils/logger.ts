@@ -40,17 +40,17 @@ export class Logger {
         }
     }
 
-    public error(msg: String, ...placeholders: any[]): void { this.log("[Lucee LSP] [ERROR] ", LogLevel.ERROR, msg, placeholders); }
+    public error(msg: String, ...placeholders: any[]): void { this.log("Lucee LSP [ERROR] ", LogLevel.ERROR, msg, placeholders); }
 
-    public warn(msg: String, ...placeholders: any[]): void { this.log("[Lucee LSP] [WARN] ", LogLevel.WARN, msg, placeholders); }
+    public warn(msg: String, ...placeholders: any[]): void { this.log("Lucee LSP [WARN] ", LogLevel.WARN, msg, placeholders); }
 
-    public info(msg: String, ...placeholders: any[]): void { this.log("[Lucee LSP] [INFO] ", LogLevel.INFO, msg, placeholders); }
+    public info(msg: String, ...placeholders: any[]): void { this.log("Lucee LSP [INFO] ", LogLevel.INFO, msg, placeholders); }
 
-    public debug(msg: String, ...placeholders: any[]): void { this.log("[Lucee LSP] [DEBUG] ", LogLevel.DEBUG, msg, placeholders); }
+    public debug(msg: String, ...placeholders: any[]): void { this.log("Lucee LSP [DEBUG] ", LogLevel.DEBUG, msg, placeholders); }
 
-    public trace(msg: String, ...placeholders: any[]): void { this.log("[Lucee LSP] [TRACE] ", LogLevel.TRACE, msg, placeholders); }
+    public trace(msg: String, ...placeholders: any[]): void { this.log("Lucee LSP [TRACE] ", LogLevel.TRACE, msg, placeholders); }
 
-    public deepTrace(msg: String, ...placeholders: any[]): void { this.log("[Lucee LSP] [D_TRACE] ", LogLevel.DEEP_TRACE, msg, placeholders); }
+    public deepTrace(msg: String, ...placeholders: any[]): void { this.log("Lucee LSP [D_TRACE] ", LogLevel.DEEP_TRACE, msg, placeholders); }
 }
 
 export const LOG = new Logger(LogLevel.INFO);
