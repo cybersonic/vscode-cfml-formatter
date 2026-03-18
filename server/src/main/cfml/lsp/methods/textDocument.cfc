@@ -137,7 +137,7 @@ component accessors="true" {
 
         selectedLines = selectedLines.toList(server.separator.line);
         var extension = listLast(message.params.textDocument.uri, '.');
-        var filename = '/tmp/#hash(message.params.textDocument.uri)#.#extension#';
+        var filename = getTempDirectory() & hash(message.params.textDocument.uri) & '.' & extension;
 
         fileWrite(filename, selectedLines);
         var settings = {};
@@ -166,7 +166,7 @@ component accessors="true" {
         var defaultSettingsPath = getConfigStore().getSettings();
         // Have to save the file to disk and then run the formatter on it.
         var extension = listLast(message.params.textDocument.uri, '.');
-        var filename = '/tmp/#hash(message.params.textDocument.uri)#.#extension#';
+        var filename = getTempDirectory() & hash(message.params.textDocument.uri) & '.' & extension;
 
         fileWrite(filename, theDoc);
         var settings = {};

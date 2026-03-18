@@ -118,6 +118,17 @@ public class App {
         // Start Tomcat
         tomcat.start();
 
+        // When running from a JAR/WAR, ensure the webroot tmp directory exists so Lucee
+        // can write temporary files. Tomcat expands the webapp into a "ROOT" subdirectory
+        // of the base directory. Lucee maps CFML paths like /tmp/ to this webroot-relative
+        // directory, and will fail to write files if the directory does not exist.
+        if (runningFromJar) {
+            File rootTmpDir = new File(baseDir, "ROOT" + File.separator + "tmp");
+            if (!rootTmpDir.exists() && !rootTmpDir.mkdirs()) {
+                System.err.println("Warning: Failed to create ROOT/tmp directory: " + rootTmpDir.getAbsolutePath());
+            }
+        }
+
         // Keep the server running
         tomcat.getServer().await();
 

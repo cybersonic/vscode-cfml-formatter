@@ -41,9 +41,9 @@ component accessors=true {
         var text = textDocumentItem.getText();
 
         // write it
-        var fileHash = '/tmp/#hash(uri)#';
+        var fileHash = getTempDirectory() & hash(uri);
         var fileExtension = lCase(listLast(uri, '.'));
-        var fileName = '#fileHash#.#fileExtension#';
+        var fileName = fileHash & '.' & fileExtension;
         fileWrite(fileName, text);
 
         // Also need to check if we are formating during save.

@@ -1,4 +1,5 @@
 import * as path from "path";
+import * as os from "os";
 import { workspace, ExtensionContext, window } from "vscode";
 import * as net from "node:net";
 import * as vscode from "vscode";
@@ -196,7 +197,7 @@ export async function activate(context: ExtensionContext) {
         luceeServer = await startServer(javaPath, [
           `-Dlucee.lsp.port=${lspPort}`,
           `-Dlucee.server.port=${serverPort}`,
-          `-Dlucee.server.wardir=/tmp`,
+          `-Dlucee.server.wardir=${os.tmpdir()}`,
           "-jar",
           lspjar,
         ]);
