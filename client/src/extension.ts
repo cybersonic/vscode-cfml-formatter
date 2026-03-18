@@ -43,12 +43,18 @@ function getSettings() {
   const startLucee: boolean = true;
   const lspPort: number = config.get("lspPort");
   const serverPort: number = config.get("serverPort");
+  const formatCFCFiles: boolean = config.get("formatCFCFiles", true);
+  const formatCFMFiles: boolean = config.get("formatCFMFiles", false);
+  const formatCFSFiles: boolean = config.get("formatCFSFiles", false);
 
   return {
     javaPath,
     startLucee,
     lspPort,
     serverPort,
+    formatCFCFiles,
+    formatCFMFiles,
+    formatCFSFiles,
   };
 }
 
@@ -130,9 +136,20 @@ export async function activate(context: ExtensionContext) {
   };
 
   // Options to control the language client
+  const documentSelector: { scheme: string; pattern: string }[] = [];
+  if (settings.formatCFCFiles) {
+    documentSelector.push({ scheme: "file", pattern: "**/*.cfc" });
+  }
+  if (settings.formatCFMFiles) {
+    documentSelector.push({ scheme: "file", pattern: "**/*.cfm" });
+  }
+  if (settings.formatCFSFiles) {
+    documentSelector.push({ scheme: "file", pattern: "**/*.cfs" });
+  }
+
   const clientOptions: LanguageClientOptions = {
-    // Register the server for all documents by default
-    documentSelector: [{ scheme: "file", language: "cfml" }],
+    // Register the server for documents based on the enabled file types
+    documentSelector,
     connectionOptions: {
       maxRestartCount: 5,
     },

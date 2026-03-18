@@ -51,6 +51,21 @@
           "type": "number",
           "default": 4000,
           "description": "The port to run the Lucee server on. Used to debug the extension itself. Each editor will have its own Lucee server."
+        },
+        "cfml-formatter.formatCFCFiles": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable formatting of .cfc files"
+        },
+        "cfml-formatter.formatCFMFiles": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable formatting of .cfm files"
+        },
+        "cfml-formatter.formatCFSFiles": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable formatting of .cfs files"
         }
       },
       "commands": [
