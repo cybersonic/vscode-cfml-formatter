@@ -1,4 +1,5 @@
 {
+    "alignment.consecutive.assignments": true,
     "strings.attributes.quote": "double",
     "strings.convertNestedQuotes": true,
     "strings.quote": "single",

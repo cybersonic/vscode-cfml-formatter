@@ -52,6 +52,7 @@ component accessors=true {
         // variables.pendingMessages[config.id] = config;
         // lspEndpoint.sendMessageToClient(config);
         // Store a log of pending messages to be fulfilled. 
+
         console.log('- Initializing LSP Server');
 
         variables.initilized = true;

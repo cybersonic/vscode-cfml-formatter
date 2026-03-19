@@ -146,3 +146,6 @@ server/src/main/cfml/testbox/
 server/src/main/cfml/cfscriptme/
 server/src/main/cfml/lsp/docs/types.ts
 server/src/main/cfml/cfformat_old/
+
+resources/lucee_lsp-1.0-all.jar
+server/src/main/resources/lucee_lsp.war

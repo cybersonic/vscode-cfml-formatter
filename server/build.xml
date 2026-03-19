@@ -5,7 +5,10 @@
     <property name="dist.dir" location="dist" />
     <property name="war.output" location="${dist.dir}/lucee_lsp.war" />
     <!-- <property name="jar.output" location="${dist.dir}/my_app.jar" /> -->
-    <property name="maven.command" value="mvn" />
+    <!-- <property name="maven.command" value="mvn" /> -->
+    <condition property="maven.command" value="mvn.cmd" else="mvn">
+        <os family="windows"/>
+    </condition>
     <property name="build.dir" location="build" />
 
     <!-- Clean task -->

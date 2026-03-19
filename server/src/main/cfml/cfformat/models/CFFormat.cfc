@@ -265,7 +265,11 @@ component accessors="true" {
     }
 
     function cftokensFile(cmd, fullFilePath) {
-        var p = createObject('java', 'java.lang.ProcessBuilder').init([executable, cmd, fullFilePath]).start();
+        /* Added support for Windows */
+        var p = createObject('java', 'java.lang.ProcessBuilder')
+        .init([executable, cmd, fullFilePath])
+        .redirectErrorStream(true)
+        .start();
         var inputStreamReader = createObject('java', 'java.io.InputStreamReader').init(p.getInputStream(), 'utf-8');
         var bufferedReader = createObject('java', 'java.io.BufferedReader').init(inputStreamReader);
         var collector = createObject('java', 'java.util.stream.Collectors').joining(variables.lf);

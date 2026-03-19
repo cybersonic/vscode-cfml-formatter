@@ -152,6 +152,7 @@ component accessors="true" {
     }
 
 
+    /* Added support for Windows */
     public struct function formatting(required struct message) {
         var theDoc = getTextDocumentStore().getDocument(arguments.message.params.textDocument.uri);
 
@@ -163,36 +164,22 @@ component accessors="true" {
                 'error': {'code': -32603, 'message': 'Document not found, try re-opening the file'}
             };
         }
-        var defaultSettingsPath = getConfigStore().getSettings();
-        // Have to save the file to disk and then run the formatter on it.
-        var extension = listLast(message.params.textDocument.uri, '.');
-        var filename = '/tmp/#hash(message.params.textDocument.uri)#.#extension#';
 
-        fileWrite(filename, theDoc);
         var settings = {};
         var rootURI = getConfigStore().getConfig().rootURI;
-
-        // All the findConfigFile stuff should be in one function, we should do finding and returning of the config.
         var loadSettings = findConfigFile(message.params.textDocument.uri, rootURI);
-
-
 
         if (len(loadSettings)) {
             showClientLog('info', 'Loading settings from ' & loadSettings);
-            var rawSettings = fileRead(loadSettings);
-            settings = deserializeJSON(rawSettings);
+            settings = deserializeJSON(fileRead(loadSettings));
         } else {
             showClientMessage('warning', 'No formatting settings found. Using Default');
             showClientLog('warning', 'No formatting settings found. Using Default');
         }
 
-
         try {
-            // console.log("Config Settings", settings);
-            var originalLines = getLines(theDoc);
-            var formattedDoc = getCFFormat().formatFile(filename, settings);
-            // Send a message to the client to let them know what we are formatting with
-            // getLSP('info', 'Formatting with settings');
+            var originalLines = getLines(theDoc.getText());
+            var formattedDoc = getCFFormat().formatText(theDoc.getText(), settings);
             var docname = listLast(arguments.message.params.textDocument.uri, '/');
             showClientMessage('info', 'Formatted #docname#');
             showClientLog('info', 'Formatted #docname#');
@@ -203,14 +190,13 @@ component accessors="true" {
                     {
                         'range': {
                             'start': {'line': 0, 'character': 0},
-                            'end': {'line': originalLines.len(), 'character': originalLines.last().len()}
+                            'end': {'line': originalLines.len(), 'character': originalLines.isEmpty() ? 0 : originalLines.last().len()}
                         },
                         'newText': formattedDoc
                     }
                 ]
             }
         } catch (ext) {
-            // Need to decorate with the file.
             var message = '#ext.message# in #message.params.textDocument.uri#';
             showClientMessage('error', message);
             showClientLog('error', message);
@@ -218,10 +204,6 @@ component accessors="true" {
                 return {'jsonrpc': '2.0', 'id': message.id, 'error': {'code': -32700, 'message': message, 'data': ext}}
             }
             return {'jsonrpc': '2.0', 'error': {'code': -32700, 'message': message, 'data': ext}}
-
-
-
-            // throw(ext);
         }
     }
 

@@ -21,6 +21,8 @@ import {
 } from "vscode-languageclient/node";
 import { Status, StatusBarEntry } from "./utils/status";
 
+import * as os from "os";
+
 const label = "CFML Formatter";
 let lspPort: number = 2089;
 let serverPort: number = 4000;
@@ -136,6 +138,14 @@ export async function activate(context: ExtensionContext) {
     connectionOptions: {
       maxRestartCount: 5,
     },
+    middleware: {
+        provideDocumentFormattingEdits: async (document, options, token, next) => {
+            const source = new vscode.CancellationTokenSource();
+            const result = await next(document, options, source.token);
+            source.dispose();
+            return result;
+        }
+    },
     synchronize: {
       // Notify the server about file changes to varioius config files contained in the workspace
       fileEvents: [
@@ -196,7 +206,8 @@ export async function activate(context: ExtensionContext) {
         luceeServer = await startServer(javaPath, [
           `-Dlucee.lsp.port=${lspPort}`,
           `-Dlucee.server.port=${serverPort}`,
-          `-Dlucee.server.wardir=/tmp`,
+          /* Added support for Windows */
+          `-Dlucee.server.wardir=${os.tmpdir()}`,
           "-jar",
           lspjar,
         ]);
